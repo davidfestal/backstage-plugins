@@ -1,18 +1,39 @@
-import * as React from 'react';
+import React from 'react';
 
 import './TopologyResourcesTabPanelItem.css';
 
-const TopologyResourcesTabPanelItem: React.FC<{
+type TopologyResourcesTabPanelItemProps = {
   resourceLabel: string;
   dataTest?: string;
-}> = ({ resourceLabel, children, dataTest }) => {
+  showResCount?: number;
+};
+
+const TopologyResourcesTabPanelItem = ({
+  resourceLabel,
+  children,
+  dataTest,
+  showResCount,
+}: React.PropsWithChildren<TopologyResourcesTabPanelItemProps>) => {
   const emptyState = (
-    <span className="topology-text-muted">{`No ${resourceLabel} found for this resource.`}</span>
+    <span className="bs-topology-text-muted">{`No ${resourceLabel} found for this resource.`}</span>
   );
   return (
     <>
-      <h2 className="topology-resources-tab-item-title">{resourceLabel}</h2>
-      <ul className="topology-resources-tab-item-list" data-testid={dataTest}>
+      <div className="bs-topology-resources-tab-item-title">
+        <h2 className="bs-topology-resources-tab-item-label">
+          {resourceLabel}
+        </h2>
+        {showResCount ? (
+          <span
+            className="bs-topology-text-muted"
+            data-testid="res-show-count"
+          >{`Showing latest ${showResCount} ${resourceLabel}`}</span>
+        ) : null}
+      </div>
+      <ul
+        className="bs-topology-resources-tab-item-list"
+        data-testid={dataTest}
+      >
         {children ? children : emptyState}
       </ul>
     </>

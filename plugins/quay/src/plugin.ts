@@ -1,14 +1,16 @@
+import { Entity } from '@backstage/catalog-model';
 import {
+  configApiRef,
   createApiFactory,
   createPlugin,
-  discoveryApiRef,
-  configApiRef,
   createRoutableExtension,
+  discoveryApiRef,
+  identityApiRef,
 } from '@backstage/core-plugin-api';
-import { tagRouteRef, rootRouteRef } from './routes';
+
 import { QuayApiClient, quayApiRef } from './api';
 import { QUAY_ANNOTATION_REPOSITORY } from './hooks';
-import { Entity } from '@backstage/catalog-model';
+import { rootRouteRef, tagRouteRef } from './routes';
 
 export const quayPlugin = createPlugin({
   id: 'quay',
@@ -22,9 +24,10 @@ export const quayPlugin = createPlugin({
       deps: {
         discoveryApi: discoveryApiRef,
         configApi: configApiRef,
+        identityApi: identityApiRef,
       },
-      factory: ({ discoveryApi, configApi }) =>
-        new QuayApiClient({ discoveryApi, configApi }),
+      factory: ({ discoveryApi, configApi, identityApi }) =>
+        new QuayApiClient({ discoveryApi, configApi, identityApi }),
     }),
   ],
 });

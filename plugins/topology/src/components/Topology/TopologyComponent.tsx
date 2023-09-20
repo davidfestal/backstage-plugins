@@ -1,14 +1,19 @@
 import React from 'react';
+
 import { useTheme } from '@material-ui/core/styles';
-import { TopologyWorkloadView } from './TopologyWorkloadView';
-import { ModelsPlural } from '../../models';
+
+import { FilterContext } from '../../hooks/FilterContext';
 import { K8sResourcesContext } from '../../hooks/K8sResourcesContext';
+import { useFilterContextValues } from '../../hooks/useFilterContextValues';
 import { useK8sObjectsResponse } from '../../hooks/useK8sObjectsResponse';
+import { ModelsPlural } from '../../models';
+import { ModelsPlural as TektonModels } from '../../pipeline-models';
+import { TopologyWorkloadView } from './TopologyWorkloadView';
 
 import './TopologyComponent.css';
 
 const THEME_DARK = 'dark';
-const THEME_DARK_CLASS = 'pf-theme-dark';
+const THEME_DARK_CLASS = 'pf-v5-theme-dark';
 
 export const TopologyComponent = () => {
   const {
@@ -34,15 +39,23 @@ export const TopologyComponent = () => {
     ModelsPlural.statefulsets,
     ModelsPlural.cronjobs,
     ModelsPlural.jobs,
+    ModelsPlural.routes,
+    TektonModels.taskruns,
+    TektonModels.pipelineruns,
+    TektonModels.pipelines,
+    ModelsPlural.checlusters,
   ];
 
   const k8sResourcesContextData = useK8sObjectsResponse(watchedResources);
+  const filterContextData = useFilterContextValues();
 
   return (
     <K8sResourcesContext.Provider value={k8sResourcesContextData}>
-      <div className="pf-ri__topology">
-        <TopologyWorkloadView />
-      </div>
+      <FilterContext.Provider value={filterContextData}>
+        <div className="pf-ri__topology">
+          <TopologyWorkloadView />
+        </div>
+      </FilterContext.Provider>
     </K8sResourcesContext.Provider>
   );
 };

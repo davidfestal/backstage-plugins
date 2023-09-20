@@ -1,5 +1,7 @@
 import { createTemplateAction } from '@backstage/plugin-scaffolder-node';
+
 import yaml from 'yaml';
+
 import querystring from 'querystring';
 
 const id = 'sonarqube:create-project';
@@ -11,7 +13,7 @@ interface RequestParameters {
   visibility?: string;
 }
 
-interface TemplateActionParameters {
+type TemplateActionParameters = {
   baseUrl: string;
   token?: string;
   username?: string;
@@ -20,7 +22,7 @@ interface TemplateActionParameters {
   key: string;
   branch?: string;
   visibility?: string;
-}
+};
 
 const examples = [
   {
@@ -185,12 +187,7 @@ export const createSonarQubeProjectAction = () => {
         `${baseUrl}/api/projects/create?${queryString}`,
       );
 
-      let authString;
-      if (token) {
-        authString = `${token}:`;
-      } else {
-        authString = `${username}:${password}`;
-      }
+      const authString = token ? `${token}:` : `${username}:${password}`;
 
       const encodedAuthString = Buffer.from(authString).toString('base64');
 
@@ -207,12 +204,10 @@ export const createSonarQubeProjectAction = () => {
         if (response.status === 401) {
           errorMessage =
             'Unauthorized, please use a valid token or username and password';
-        } else {
-          if (!response.statusText) {
-            const responseBody = await response.json();
-            const errorList = responseBody.errors;
-            errorMessage = errorList[0].msg;
-          }
+        } else if (!response.statusText) {
+          const responseBody = await response.json();
+          const errorList = responseBody.errors;
+          errorMessage = errorList[0].msg;
         }
 
         throw new Error(

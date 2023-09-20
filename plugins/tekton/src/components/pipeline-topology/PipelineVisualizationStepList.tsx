@@ -1,9 +1,12 @@
-import * as React from 'react';
-import classNames from 'classnames';
+import React from 'react';
+
 import { RunStatus } from '@patternfly/react-topology';
-import { StatusIcon } from '../common/StatusIcon';
+import classNames from 'classnames';
+
+import { getRunStatusColor } from '@janus-idp/shared-react';
+
 import { StepStatus } from '../../types/taskRun';
-import { getRunStatusColor } from '../../utils/tekton-status';
+import { StatusIcon } from '../common';
 
 import './PipelineVisualizationStepList.css';
 
@@ -19,9 +22,9 @@ type TooltipColoredStatusIconProps = {
   status: RunStatus;
 };
 
-const TooltipColoredStatusIcon: React.FC<TooltipColoredStatusIconProps> = ({
+const TooltipColoredStatusIcon = ({
   status,
-}) => {
+}: TooltipColoredStatusIconProps) => {
   const size = 18;
   const sharedProps = {
     height: size,
@@ -34,7 +37,7 @@ const TooltipColoredStatusIcon: React.FC<TooltipColoredStatusIconProps> = ({
     // Succeeded and Failed icons have transparent centers shapes - in tooltips, this becomes an undesired black
     // This will simply wrap the icon and place a white backdrop
     return (
-      <div style={{ color: getRunStatusColor(status).pftoken.value }}>
+      <div style={{ color: getRunStatusColor(status).color }}>
         <svg {...sharedProps}>
           <circle
             className="bs-tkn-pipeline-visualization-step-list__icon-backdrop"
@@ -51,9 +54,13 @@ const TooltipColoredStatusIcon: React.FC<TooltipColoredStatusIconProps> = ({
   return icon;
 };
 
-export const PipelineVisualizationStepList: React.FC<
-  PipelineVisualizationStepListProps
-> = ({ isSpecOverview, taskName, steps, isFinallyTask, hideHeader }) => {
+export const PipelineVisualizationStepList = ({
+  isSpecOverview,
+  taskName,
+  steps,
+  isFinallyTask,
+  hideHeader,
+}: PipelineVisualizationStepListProps) => {
   return (
     <div className="bs-tkn-pipeline-visualization-step-list">
       {!hideHeader && (

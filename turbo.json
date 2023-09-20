@@ -1,0 +1,26 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "pipeline": {
+    "start": {
+      "cache": false,
+      "persistent": true
+    },
+    "build": {
+      "outputs": ["dist/**"],
+      "dependsOn": ["tsc", "^build"]
+    },
+    "clean": {
+      "cache": false
+    },
+    "test": {
+      "outputs": ["coverage/**"],
+      "dependsOn": ["build"]
+    },
+    "lint": {},
+    "tsc": {
+      "outputs": ["../../dist-types/**"],
+      "dependsOn": ["^tsc"]
+    }
+  },
+  "globalDependencies": ["prettierrc.js"]
+}

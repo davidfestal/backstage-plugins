@@ -1,22 +1,24 @@
-import * as React from 'react';
-import { BaseNode } from '@patternfly/react-topology';
-import { TYPE_WORKLOAD } from '../const';
-import TopologySideBar from '../components/Topology/TopologySideBar/TopologySideBar';
+import React from 'react';
 
-export const useSideBar = (
-  selectedIds: string[],
-): [
+import { BaseNode } from '@patternfly/react-topology';
+
+import TopologySideBar from '../components/Topology/TopologySideBar/TopologySideBar';
+import { TYPE_WORKLOAD } from '../const';
+
+export const useSideBar = (): [
   React.ReactNode,
   boolean,
   string,
   React.Dispatch<React.SetStateAction<boolean>>,
   React.Dispatch<React.SetStateAction<BaseNode | null>>,
+  () => void,
 ] => {
   const { search } = window.location;
   const [sideBarOpen, setSideBarOpen] = React.useState<boolean>(false);
   const [selectedNode, setSelectedNode] = React.useState<BaseNode | null>(null);
 
   const params = React.useMemo(() => new URLSearchParams(search), [search]);
+  const selectedId = params.get('selectedId') ?? '';
 
   const removeSelectedIdParam = React.useCallback(() => {
     params.delete('selectedId');
@@ -28,15 +30,6 @@ export const useSideBar = (
     );
   }, [params]);
 
-  const selectedId = React.useMemo((): string => {
-    const id = params.get('selectedId') ?? '';
-    if (selectedIds?.length && selectedIds.includes(id)) {
-      return id;
-    }
-    removeSelectedIdParam();
-    return '';
-  }, [params, removeSelectedIdParam, selectedIds]);
-
   const sideBar = selectedNode && selectedNode.getType() === TYPE_WORKLOAD && (
     <TopologySideBar
       onClose={() => {
@@ -47,5 +40,12 @@ export const useSideBar = (
     />
   );
 
-  return [sideBar, sideBarOpen, selectedId, setSideBarOpen, setSelectedNode];
+  return [
+    sideBar,
+    sideBarOpen,
+    selectedId,
+    setSideBarOpen,
+    setSelectedNode,
+    removeSelectedIdParam,
+  ];
 };

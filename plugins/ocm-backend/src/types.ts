@@ -1,3 +1,5 @@
+import { TaskScheduleDefinition } from '@backstage/backend-tasks';
+
 import { KubernetesObject, V1PodCondition } from '@kubernetes/client-node';
 
 export type OcmConfig = {
@@ -8,6 +10,7 @@ export type OcmConfig = {
   skipTLSVerify?: boolean;
   caData?: string;
   owner: string;
+  schedule?: TaskScheduleDefinition;
 };
 
 export interface ClusterClaim {
@@ -47,7 +50,7 @@ export interface ManagedClusterInfo extends KubernetesObject {
     masterEndpoint: string;
   };
   status?: {
-    nodeList: {
+    nodeList?: {
       capacity: {
         cpu: string;
         memory: string;

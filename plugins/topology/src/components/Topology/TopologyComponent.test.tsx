@@ -1,7 +1,9 @@
 import React from 'react';
-import { render } from '@testing-library/react';
-import { TopologyComponent } from './TopologyComponent';
+
 import { useTheme } from '@material-ui/core';
+import { render } from '@testing-library/react';
+
+import { TopologyComponent } from './TopologyComponent';
 
 jest.mock('../../hooks/useK8sObjectsResponse', () => ({
   useK8sObjectsResponse: () => ({
@@ -50,7 +52,7 @@ describe('TopologyComponent', () => {
     });
     render(<TopologyComponent />);
     const htmlTagElement = document.documentElement;
-    expect(htmlTagElement.classList.contains('pf-theme-dark')).toBe(true);
+    expect(htmlTagElement.classList.contains('pf-v5-theme-dark')).toBe(true);
   });
 
   it('should show light theme', () => {
@@ -61,6 +63,6 @@ describe('TopologyComponent', () => {
     });
     render(<TopologyComponent />);
     const htmlTagElement = document.documentElement;
-    expect(htmlTagElement.classList.contains('pf-theme-dark')).toBe(false);
+    expect(htmlTagElement.classList.contains('pf-v5-theme-dark')).toBe(false);
   });
 });

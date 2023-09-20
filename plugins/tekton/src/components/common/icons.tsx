@@ -1,9 +1,11 @@
-import * as React from 'react';
+import React from 'react';
+
+import { Icon } from '@patternfly/react-core';
 import {
   CheckCircleIcon,
-  InfoCircleIcon,
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
+  InfoCircleIcon,
 } from '@patternfly/react-icons';
 import classNames from 'classnames';
 
@@ -25,17 +27,18 @@ export type ColoredIconProps = {
  * <GreenCheckCircleIcon title="Healthy" />
  * ```
  */
-export const GreenCheckCircleIcon: React.FC<ColoredIconProps> = ({
+export const GreenCheckCircleIcon = ({
   className,
   title,
   size,
-}) => (
-  <CheckCircleIcon
-    data-test="success-icon"
+}: ColoredIconProps) => (
+  <Icon
     size={size}
-    className={classNames('icons__green-check-icon', className)}
     title={title}
-  />
+    className={classNames('icons__green-check-icon', className)}
+  >
+    <CheckCircleIcon data-test="success-icon" />
+  </Icon>
 );
 
 /**
@@ -48,16 +51,18 @@ export const GreenCheckCircleIcon: React.FC<ColoredIconProps> = ({
  * <RedExclamationCircleIcon title="Failed" />
  * ```
  */
-export const RedExclamationCircleIcon: React.FC<ColoredIconProps> = ({
+export const RedExclamationCircleIcon = ({
   className,
   title,
   size,
-}) => (
-  <ExclamationCircleIcon
+}: ColoredIconProps) => (
+  <Icon
     size={size}
     className={classNames('icons__red-exclamation-icon', className)}
     title={title}
-  />
+  >
+    <ExclamationCircleIcon />
+  </Icon>
 );
 
 /**
@@ -70,16 +75,18 @@ export const RedExclamationCircleIcon: React.FC<ColoredIconProps> = ({
  * <YellowExclamationTriangleIcon title="Warning" />
  * ```
  */
-export const YellowExclamationTriangleIcon: React.FC<ColoredIconProps> = ({
+export const YellowExclamationTriangleIcon = ({
   className,
   title,
   size,
-}) => (
-  <ExclamationTriangleIcon
+}: ColoredIconProps) => (
+  <Icon
     size={size}
     className={classNames('icons__yellow-exclamation-icon', className)}
     title={title}
-  />
+  >
+    <ExclamationTriangleIcon />
+  </Icon>
 );
 
 /**
@@ -92,12 +99,11 @@ export const YellowExclamationTriangleIcon: React.FC<ColoredIconProps> = ({
  * <BlueInfoCircleIcon title="Info" />
  * ```
  */
-export const BlueInfoCircleIcon: React.FC<ColoredIconProps> = ({
-  className,
-  title,
-}) => (
-  <InfoCircleIcon
+export const BlueInfoCircleIcon = ({ className, title }: ColoredIconProps) => (
+  <Icon
     className={classNames('icons__blue-info-icon', className)}
     title={title}
-  />
+  >
+    <InfoCircleIcon />
+  </Icon>
 );

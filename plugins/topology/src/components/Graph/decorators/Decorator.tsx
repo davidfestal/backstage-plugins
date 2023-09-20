@@ -1,6 +1,7 @@
-import * as React from 'react';
-import { Decorator as PfDecorator } from '@patternfly/react-topology';
+import React from 'react';
 import { Link } from 'react-router-dom';
+
+import { Decorator as PfDecorator } from '@patternfly/react-topology';
 
 import './Decorator.css';
 
@@ -15,7 +16,7 @@ type DecoratorTypes = {
   circleRef?: React.Ref<SVGCircleElement>;
 };
 
-const Decorator: React.FunctionComponent<DecoratorTypes> = ({
+const Decorator = ({
   x,
   y,
   radius,
@@ -23,7 +24,7 @@ const Decorator: React.FunctionComponent<DecoratorTypes> = ({
   ariaLabel,
   external,
   ...rest
-}) => {
+}: React.PropsWithChildren<DecoratorTypes>) => {
   const decorator = (
     <PfDecorator
       x={x}

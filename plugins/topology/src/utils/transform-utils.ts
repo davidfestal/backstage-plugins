@@ -4,6 +4,7 @@ import {
   NodeModel,
   NodeShape,
 } from '@patternfly/react-topology';
+
 import {
   GROUP_HEIGHT,
   GROUP_PADDING,
@@ -58,7 +59,7 @@ export const getTopologyNodeItem = (
     resource,
     resourceKind: kind,
     data,
-    ...(children && children.length && { children }),
+    ...(children?.length ? { children } : {}),
     ...(nodeProps || {}),
   };
 };
@@ -144,7 +145,7 @@ const mergeGroups = (
   newGroups: NodeModel[],
   existingGroups: NodeModel[],
 ): void => {
-  if (!newGroups || !newGroups.length) {
+  if (!newGroups?.length) {
     return;
   }
   newGroups.forEach(newGroup => {

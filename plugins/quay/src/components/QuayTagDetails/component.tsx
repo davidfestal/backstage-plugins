@@ -1,12 +1,15 @@
-import { TableColumn, Link, Table } from '@backstage/core-components';
 import React from 'react';
-import { Layer, Vulnerability, VulnerabilityListItem } from '../../types';
+
+import { Link, Table, TableColumn } from '@backstage/core-components';
+import type { RouteFunc } from '@backstage/core-plugin-api';
+
+import { makeStyles, TableContainer, TableHead } from '@material-ui/core';
+import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
 import LinkIcon from '@material-ui/icons/Link';
 import WarningIcon from '@material-ui/icons/Warning';
-import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
+
 import { SEVERITY_COLORS } from '../../lib/utils';
-import { TableContainer, TableHead, makeStyles } from '@material-ui/core';
-import type { RouteFunc } from '@backstage/core-plugin-api';
+import { Layer, Vulnerability, VulnerabilityListItem } from '../../types';
 
 type QuayTagDetailsProps = {
   layer: Layer;
@@ -99,7 +102,7 @@ const useStyles = makeStyles({
   },
 });
 
-export const QuayTagDetails: React.FC<QuayTagDetailsProps> = ({
+export const QuayTagDetails = ({
   layer,
   rootLink,
   digest,
@@ -111,6 +114,7 @@ export const QuayTagDetails: React.FC<QuayTagDetailsProps> = ({
     .map(feature => {
       // TS doesn't seem to register this list as never being undefined from the above filter
       // so we cast it into the list
+      // NOSONAR - irrelevant as per above comment
       return (feature.Vulnerabilities as Vulnerability[]).map(
         (v: Vulnerability): VulnerabilityListItem => {
           return {

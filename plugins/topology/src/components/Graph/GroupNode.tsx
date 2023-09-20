@@ -1,4 +1,5 @@
-import * as React from 'react';
+import React from 'react';
+
 import {
   DefaultGroup,
   GraphElement,
@@ -14,10 +15,7 @@ type GroupNodeProps = {
   element?: GraphElement;
 } & Partial<WithSelectionProps & WithDragNodeProps>;
 
-const GroupNode: React.FunctionComponent<GroupNodeProps> = ({
-  element,
-  ...rest
-}) => {
+const GroupNode = ({ element, ...rest }: GroupNodeProps) => {
   const detailsLevel = useDetailsLevel();
 
   if (!element || !isNode(element)) {

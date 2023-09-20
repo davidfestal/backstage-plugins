@@ -1,14 +1,19 @@
-import * as React from 'react';
-import { ModelsPlural } from '../../models';
-import { useTektonObjectsResponse } from '../../hooks/useTektonObjectsResponse';
+import React from 'react';
+
 import { TektonResourcesContext } from '../../hooks/TektonResourcesContext';
-import PipelineRunList from '../PipelineRunList/PipelineRunList';
 import { useDarkTheme } from '../../hooks/useDarkTheme';
+import { useTektonObjectsResponse } from '../../hooks/useTektonObjectsResponse';
+import { ModelsPlural } from '../../models';
+import PipelineRunList from '../PipelineRunList/PipelineRunList';
 
 export const TektonComponent = () => {
   useDarkTheme();
 
-  const watchedResources = [ModelsPlural.pipelineruns, ModelsPlural.taskruns];
+  const watchedResources = [
+    ModelsPlural.pipelineruns,
+    ModelsPlural.taskruns,
+    ModelsPlural.pods,
+  ];
   const tektonResourcesContextData = useTektonObjectsResponse(watchedResources);
 
   return (

@@ -1,4 +1,6 @@
 import {
+  V1ContainerState,
+  V1ContainerStatus,
   V1CronJob,
   V1DaemonSet,
   V1Deployment,
@@ -6,13 +8,18 @@ import {
   V1ReplicaSet,
   V1StatefulSet,
 } from '@kubernetes/client-node';
-import { AllPodStatus } from '../components/Pods/pod';
+
+import { AllPodStatus, PodPhase } from '../components/Pods/pod';
 import { ReplicaSetGVK, StatefulSetGVK } from '../models';
-import { PodControllerOverviewItem, PodRCData } from '../types/pods';
+import {
+  OverviewItemAlerts,
+  PodControllerOverviewItem,
+  PodRCData,
+} from '../types/pods';
 import {
   GroupVersionKind,
-  K8sWorkloadResource,
   K8sResponseData,
+  K8sWorkloadResource,
 } from '../types/types';
 
 // List of container status waiting reason values that we should call out as errors in project status rows.
@@ -39,10 +46,10 @@ const isIdled = (deployment: K8sWorkloadResource): boolean => {
 
 export const getDeploymentRevision = (
   obj: K8sWorkloadResource,
-): number | null => {
+): number | undefined => {
   const revisionAnnotation = getAnnotation(obj, DEPLOYMENT_REVISION_ANNOTATION);
   const revision = revisionAnnotation && parseInt(revisionAnnotation, 10);
-  return revision && Number.isFinite(revision) ? revision : null;
+  return revision && Number.isFinite(revision) ? revision : undefined;
 };
 
 const getOwnedResources = <T extends K8sWorkloadResource>(
@@ -108,7 +115,7 @@ const sortByRevision = (
     return leftVersion - rightVersion;
   };
 
-  return replicators?.sort(compare);
+  return Array.from(replicators)?.sort(compare);
 };
 
 const sortReplicaSetsByRevision = (
@@ -135,7 +142,7 @@ const podAlertKey = (
   return `${alert}--${id}--${containerName}`;
 };
 
-const getPodAlerts = (pod: V1Pod) => {
+const getPodAlerts = (pod: V1Pod): OverviewItemAlerts => {
   const alerts = {} as { [key: string]: any };
   const statuses = [
     ...(pod?.status?.initContainerStatuses
@@ -180,26 +187,25 @@ const combinePodAlerts = (pods: V1Pod[]) =>
       ...acc,
       ...getPodAlerts(pod),
     }),
-    {},
+    {} as OverviewItemAlerts,
   );
 
 const toResourceItem = (
   rs: V1ReplicaSet,
   gvk: GroupVersionKind,
   resources: K8sResponseData,
-) => {
+): PodControllerOverviewItem => {
   const obj = {
     ...rs,
     apiVersion: apiVersionForModel(gvk),
     kind: `${gvk.kind}`,
   };
   const podData = getPodsForResource(rs, resources);
-  const pods = podData && podData;
-  const alerts = combinePodAlerts(pods);
+  const alerts = combinePodAlerts(podData);
   return {
     alerts,
     obj,
-    pods,
+    pods: podData,
     revision: getDeploymentRevision(rs),
   };
 };
@@ -232,10 +238,7 @@ const getReplicaSetsForResource = (
   const replicaSets = getActiveReplicaSets(deployment, resources);
   const sortReplicaSets = sortReplicaSetsByRevision(replicaSets);
   return sortReplicaSets.map((rs: V1ReplicaSet) =>
-    getIdledStatus(
-      toResourceItem(rs, ReplicaSetGVK, resources) as PodControllerOverviewItem,
-      deployment,
-    ),
+    getIdledStatus(toResourceItem(rs, ReplicaSetGVK, resources), deployment),
   );
 };
 
@@ -258,14 +261,7 @@ export const getStatefulSetsResource = (
 ) => {
   const activeStatefulSets = getActiveStatefulSets(statefulSet, resources);
   return activeStatefulSets.map(pss =>
-    getIdledStatus(
-      toResourceItem(
-        pss as V1StatefulSet,
-        StatefulSetGVK,
-        resources,
-      ) as PodControllerOverviewItem,
-      statefulSet,
-    ),
+    getIdledStatus(toResourceItem(pss, StatefulSetGVK, resources), statefulSet),
   );
 };
 
@@ -310,8 +306,8 @@ export const getJobsForCronJob = (
   if (!resources?.jobs?.data?.length || resources?.jobs?.data?.length === 0) {
     return [];
   }
-  return resources.jobs.data.filter(job =>
-    job.metadata?.ownerReferences?.find(ref => ref.uid === cronJobUid),
+  return resources.jobs.data.filter(
+    job => job.metadata?.ownerReferences?.find(ref => ref.uid === cronJobUid),
   );
 };
 
@@ -374,4 +370,81 @@ export const getPodsDataForResource = (
         pods: getPodsForResource(resource, resources),
       };
   }
+};
+
+// This logic is replicated from k8s (at this writing, Kubernetes 1.17)
+// (See https://github.com/kubernetes/kubernetes/blob/release-1.17/pkg/printers/internalversion/printers.go)
+export const podPhase = (pod: V1Pod): PodPhase => {
+  if (!pod) {
+    return '';
+  }
+
+  if (pod?.metadata?.deletionTimestamp) {
+    return 'Terminating';
+  }
+
+  if (!pod.status) {
+    return '';
+  }
+
+  if (pod.status.reason === 'NodeLost') {
+    return 'Unknown';
+  }
+
+  if (pod.status.reason === 'Evicted') {
+    return 'Evicted';
+  }
+
+  let initializing = false;
+  let phase = pod.status.phase || pod.status.reason || null;
+
+  pod.status.initContainerStatuses?.forEach(
+    (container: V1ContainerStatus, i: number) => {
+      const { terminated, waiting } = container.state as V1ContainerState;
+      if (terminated?.exitCode === 0) {
+        return true;
+      }
+
+      initializing = true;
+      if (terminated?.reason) {
+        phase = `Init:${terminated.reason}`;
+      } else if (terminated && !terminated.reason) {
+        phase = terminated.signal
+          ? `Init:Signal:${terminated.signal}`
+          : `Init:ExitCode:${terminated.exitCode}`;
+      } else if (waiting?.reason && waiting.reason !== 'PodInitializing') {
+        phase = `Init:${waiting.reason}`;
+      } else {
+        phase = `Init:${i}/${pod?.status?.initContainerStatuses?.length}`;
+      }
+      return false;
+    },
+  );
+
+  if (!initializing) {
+    let hasRunning = false;
+    const containerStatuses = pod.status.containerStatuses || [];
+    for (let i = containerStatuses.length - 1; i >= 0; i--) {
+      const { state, ready } = containerStatuses[i];
+      if (state?.terminated?.reason) {
+        phase = state?.terminated.reason;
+      } else if (state?.waiting?.reason) {
+        phase = state?.waiting.reason;
+      } else if (state?.waiting && !state.waiting?.reason) {
+        phase = state?.terminated?.signal
+          ? `Signal:${state?.terminated.signal}`
+          : `ExitCode:${state?.terminated?.exitCode}`;
+      } else if (state?.running && ready) {
+        hasRunning = true;
+      }
+    }
+
+    // Change pod status back to "Running" if there is at least one container
+    // still reporting as "Running" status.
+    if (phase === 'Completed' && hasRunning) {
+      phase = 'Running';
+    }
+  }
+
+  return phase;
 };

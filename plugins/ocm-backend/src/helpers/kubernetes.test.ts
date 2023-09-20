@@ -1,15 +1,17 @@
-import {
-  hubApiClient,
-  getManagedCluster,
-  listManagedClusters,
-  getManagedClusterInfo,
-} from './kubernetes';
+import { CustomObjectsApi, KubeConfig } from '@kubernetes/client-node';
+import { setupServer } from 'msw/node';
 import { createLogger } from 'winston';
 import transports from 'winston/lib/winston/transports';
-import { CustomObjectsApi, KubeConfig } from '@kubernetes/client-node';
-import { OcmConfig } from '../types';
-import { setupServer } from 'msw/node';
+
 import { handlers } from '../../__fixtures__/handlers';
+import { OcmConfig } from '../types';
+import {
+  getManagedCluster,
+  getManagedClusterInfo,
+  hubApiClient,
+  listManagedClusterInfos,
+  listManagedClusters,
+} from './kubernetes';
 
 const server = setupServer(...handlers);
 
@@ -100,5 +102,13 @@ describe('getManagedClusterInfo', () => {
   it('should return cluster', async () => {
     const result: any = await getManagedClusterInfo(getApi(), 'local-cluster');
     expect(result.metadata.name).toBe('local-cluster');
+  });
+});
+
+describe('getManagedClusterInfos', () => {
+  it('should return some cluster infos', async () => {
+    const result: any = await listManagedClusterInfos(getApi());
+    expect(result.items[0].metadata.name).toBe('local-cluster');
+    expect(result.items[1].metadata.name).toBe('cluster1');
   });
 });

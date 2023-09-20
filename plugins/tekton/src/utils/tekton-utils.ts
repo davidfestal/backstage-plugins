@@ -2,25 +2,24 @@ import {
   ClusterObjects,
   ObjectsByEntityResponse,
 } from '@backstage/plugin-kubernetes-common';
+
 import { pluralize } from '@patternfly/react-core';
-import { PipelineRunGVK, TaskRunGVK } from '../models';
+import { get } from 'lodash';
+
 import {
   ComputedStatus,
-  SucceedConditionReason,
-  TaskStatus,
-} from '../types/computedStatus';
-import { PipelineRunKind } from '../types/pipelineRun';
-import { TaskRunKind } from '../types/taskRun';
-import { ClusterErrors, TektonResponseData } from '../types/types';
-import {
+  getTaskRunsForPipelineRun,
   pipelineRunFilterReducer,
+  PipelineRunKind,
   pipelineRunStatus,
-} from './pipeline-filter-reducer';
+  SucceedConditionReason,
+  TaskRunKind,
+  TaskStatusTypes,
+  updateTaskStatus,
+} from '@janus-idp/shared-react';
 
-type TektonResources = {
-  pipelineRuns: PipelineRunKind[];
-  taskRuns: TaskRunKind[];
-};
+import { PipelineRunGVK, TaskRunGVK } from '../models';
+import { ClusterErrors, Order, TektonResponseData } from '../types/types';
 
 export const getClusters = (k8sObjects: ObjectsByEntityResponse) => {
   const clusters: string[] = k8sObjects.items.map(
@@ -52,6 +51,12 @@ export const getTektonResources = (
 ) =>
   k8sObjects.items?.[cluster]?.resources?.reduce(
     (acc: TektonResponseData, res: any) => {
+      if (res.type === 'pods') {
+        return {
+          ...acc,
+          pods: { data: res.resources },
+        };
+      }
       if (
         res.type !== 'customresources' ||
         (res.type === 'customresources' && res.resources.length === 0)
@@ -81,75 +86,18 @@ export const totalPipelineRunTasks = (pipelinerun: PipelineRunKind): number => {
   return totalTasks + finallyTasks;
 };
 
-export const getTaskRunsForPipelineRun = (
-  pipelinerun: PipelineRunKind,
-  taskRuns: TaskRunKind[],
-): TaskRunKind[] => {
-  const associatedTaskRuns = taskRuns.reduce(
-    (acc: TaskRunKind[], taskRun: TaskRunKind) => {
-      if (
-        taskRun?.metadata?.ownerReferences?.[0]?.name ===
-        pipelinerun?.metadata?.name
-      ) {
-        acc.push(taskRun);
-      }
-      return acc;
-    },
-    [],
-  );
-
-  return associatedTaskRuns;
-};
-
-export const updateTaskStatus = (
-  pipelinerun: PipelineRunKind,
-  taskRuns: TaskRunKind[],
-): TaskStatus => {
-  const skippedTaskLength = pipelinerun?.status?.skippedTasks?.length || 0;
-  const taskStatus: TaskStatus = {
-    PipelineNotStarted: 0,
-    Pending: 0,
-    Running: 0,
-    Succeeded: 0,
-    Failed: 0,
-    Cancelled: 0,
-    Skipped: skippedTaskLength,
-  };
-  if (!pipelinerun?.status?.taskRuns) {
-    return taskStatus;
-  }
-
-  taskRuns.forEach((taskRun: TaskRunKind) => {
-    const status = taskRun && pipelineRunFilterReducer(taskRun);
-    if (status === 'Succeeded') {
-      taskStatus[ComputedStatus.Succeeded]++;
-    } else if (status === 'Running') {
-      taskStatus[ComputedStatus.Running]++;
-    } else if (status === 'Failed') {
-      taskStatus[ComputedStatus.Failed]++;
-    } else if (status === 'Cancelled') {
-      taskStatus[ComputedStatus.Cancelled]++;
-    } else {
-      taskStatus[ComputedStatus.Pending]++;
-    }
-  });
-
-  return {
-    ...taskStatus,
-  };
-};
-
-export const getTaskStatus = (
+export const getTaskStatusOfPLR = (
   pipelinerun: PipelineRunKind,
   taskRuns: TaskRunKind[],
 ) => {
   const totalTasks = totalPipelineRunTasks(pipelinerun);
-  const plrTaskLength = taskRuns.length;
+  const plrTasks = getTaskRunsForPipelineRun(pipelinerun, taskRuns);
+  const plrTaskLength = plrTasks?.length;
   const skippedTaskLength = pipelinerun?.status?.skippedTasks?.length || 0;
 
-  const taskStatus: TaskStatus = updateTaskStatus(pipelinerun, taskRuns);
+  const taskStatus: TaskStatusTypes = updateTaskStatus(pipelinerun, plrTasks);
 
-  if (pipelinerun?.status?.taskRuns) {
+  if (plrTasks?.length > 0) {
     const pipelineRunHasFailure = taskStatus[ComputedStatus.Failed] > 0;
     const pipelineRunIsCancelled =
       pipelineRunFilterReducer(pipelinerun) === ComputedStatus.Cancelled;
@@ -165,11 +113,11 @@ export const getTaskStatus = (
     }
   } else if (
     pipelinerun?.status?.conditions?.[0]?.status === 'False' ||
-    pipelinerun?.spec.status === SucceedConditionReason.PipelineRunCancelled
+    pipelinerun?.spec?.status === SucceedConditionReason.PipelineRunCancelled
   ) {
     taskStatus[ComputedStatus.Cancelled] = totalTasks;
   } else if (
-    pipelinerun?.spec.status === SucceedConditionReason.PipelineRunPending
+    pipelinerun?.spec?.status === SucceedConditionReason.PipelineRunPending
   ) {
     taskStatus[ComputedStatus.Pending] += totalTasks;
   } else {
@@ -209,6 +157,28 @@ export const getDuration = (seconds: number, long?: boolean): string => {
   return duration.trim();
 };
 
+export const descendingComparator = (
+  a: PipelineRunKind,
+  b: PipelineRunKind,
+  orderBy: string,
+) => {
+  if (get(b, orderBy) < get(a, orderBy)) {
+    return -1;
+  }
+  if (get(b, orderBy) > get(a, orderBy)) {
+    return 1;
+  }
+  return 0;
+};
+
+export const getComparator =
+  (order: Order, orderBy: string) =>
+  (a: PipelineRunKind, b: PipelineRunKind) => {
+    return order === 'desc'
+      ? descendingComparator(a, b, orderBy)
+      : -descendingComparator(a, b, orderBy);
+  };
+
 export const calculateDuration = (
   startTime: string,
   endTime?: string,
@@ -221,8 +191,11 @@ export const calculateDuration = (
 };
 
 export const pipelineRunDuration = (run: PipelineRunKind): string => {
-  const startTime = run?.status?.startTime;
-  const completionTime = run?.status?.completionTime;
+  if (!run || Object.keys(run).length === 0) {
+    return '-';
+  }
+  const startTime = run.status?.startTime;
+  const completionTime = run.status?.completionTime;
 
   // Duration cannot be computed if start time is missing or a completed/failed pipeline/task has no end time
   if (!startTime || (!completionTime && pipelineRunStatus(run) !== 'Running')) {
@@ -230,35 +203,3 @@ export const pipelineRunDuration = (run: PipelineRunKind): string => {
   }
   return calculateDuration(startTime, completionTime, true);
 };
-
-export const getTektonResourcesFromClusters = (
-  k8sObjects: ObjectsByEntityResponse,
-) =>
-  k8sObjects.items?.reduce(
-    (acc: TektonResources, cluster: ClusterObjects) => {
-      const pipelineResources = cluster.resources.filter(
-        res => res.type === 'customresources',
-      );
-      let pipelineRuns: PipelineRunKind[] = [];
-      let taskRuns: TaskRunKind[] = [];
-      pipelineResources.forEach(res => {
-        pipelineRuns = [
-          ...pipelineRuns,
-          ...res.resources.filter(r => r.kind === 'PipelineRun'),
-        ];
-      });
-      pipelineResources.forEach(res => {
-        taskRuns = [
-          ...taskRuns,
-          ...res.resources.filter(r => r.kind === 'TaskRun'),
-        ];
-      });
-      // eslint-disable-next-line no-param-reassign
-      acc = {
-        pipelineRuns: [...acc.pipelineRuns, ...pipelineRuns],
-        taskRuns: [...acc.taskRuns, ...taskRuns],
-      };
-      return acc;
-    },
-    { pipelineRuns: [], taskRuns: [] },
-  );

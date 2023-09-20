@@ -1,14 +1,16 @@
+import { Entity } from '@backstage/catalog-model';
 import {
+  configApiRef,
   createApiFactory,
   createComponentExtension,
   createPlugin,
   discoveryApiRef,
-  configApiRef,
+  identityApiRef,
 } from '@backstage/core-plugin-api';
-import { Entity } from '@backstage/catalog-model';
-import { rootRouteRef } from './routes';
+
 import { JfrogArtifactoryApiClient, jfrogArtifactoryApiRef } from './api';
 import { JFROG_ARTIFACTORY_ANNOTATION_IMAGE_NAME } from './components/useJfrogArtifactoryAppData';
+import { rootRouteRef } from './routes';
 
 export const jfrogArtifactoryPlugin = createPlugin({
   id: 'jfrog-artifactory',
@@ -21,9 +23,10 @@ export const jfrogArtifactoryPlugin = createPlugin({
       deps: {
         discoveryApi: discoveryApiRef,
         configApi: configApiRef,
+        identityApi: identityApiRef,
       },
-      factory: ({ discoveryApi, configApi }) =>
-        new JfrogArtifactoryApiClient({ discoveryApi, configApi }),
+      factory: ({ discoveryApi, configApi, identityApi }) =>
+        new JfrogArtifactoryApiClient({ discoveryApi, configApi, identityApi }),
     }),
   ],
 });

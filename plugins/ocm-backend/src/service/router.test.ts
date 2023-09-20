@@ -1,10 +1,12 @@
 import { ConfigReader } from '@backstage/config';
+
 import express from 'express';
+import { setupServer } from 'msw/node';
 import request from 'supertest';
 import { createLogger, transports } from 'winston';
-import { createRouter } from './router';
-import { setupServer } from 'msw/node';
+
 import { handlers } from '../../__fixtures__/handlers';
+import { createRouter } from './router';
 
 const server = setupServer(...handlers);
 
@@ -60,6 +62,27 @@ describe('createRouter', () => {
             available: true,
             reason: 'Managed cluster is available',
           },
+          nodes: [
+            {
+              status: 'True',
+              type: 'Ready',
+            },
+            {
+              status: 'True',
+              type: 'Ready',
+            },
+            {
+              status: 'True',
+              type: 'Ready',
+            },
+          ],
+          openshiftVersion: '4.10.26',
+          platform: 'BareMetal',
+          update: {
+            available: true,
+            url: 'https://access.redhat.com/errata/RHSA-2023:0561',
+            version: '4.10.51',
+          },
         },
         {
           name: 'cluster1',
@@ -67,12 +90,86 @@ describe('createRouter', () => {
             available: true,
             reason: 'Managed cluster is available',
           },
+          nodes: [
+            {
+              status: 'True',
+              type: 'Ready',
+            },
+            {
+              status: 'True',
+              type: 'Ready',
+            },
+            {
+              status: 'True',
+              type: 'Ready',
+            },
+            {
+              status: 'True',
+              type: 'Ready',
+            },
+            {
+              status: 'True',
+              type: 'Ready',
+            },
+            {
+              status: 'True',
+              type: 'Ready',
+            },
+            {
+              status: 'True',
+              type: 'Ready',
+            },
+          ],
+          openshiftVersion: '4.9.21',
+          platform: 'BareMetal',
+          update: {
+            available: true,
+            url: 'https://access.redhat.com/errata/RHSA-2023:0561',
+            version: '4.10.51',
+          },
         },
         {
           name: 'offline-cluster',
           status: {
             available: false,
             reason: 'Managed cluster is unavailable',
+          },
+          nodes: [
+            {
+              status: 'Unknown',
+              type: 'Ready',
+            },
+            {
+              status: 'True',
+              type: 'Ready',
+            },
+            {
+              status: 'Unknown',
+              type: 'Ready',
+            },
+            {
+              status: 'True',
+              type: 'Ready',
+            },
+            {
+              status: 'True',
+              type: 'Ready',
+            },
+            {
+              status: 'True',
+              type: 'Ready',
+            },
+            {
+              status: 'True',
+              type: 'Ready',
+            },
+          ],
+          openshiftVersion: '4.9.21',
+          platform: 'BareMetal',
+          update: {
+            available: true,
+            url: 'https://access.redhat.com/errata/RHSA-2023:0561',
+            version: '4.10.51',
           },
         },
       ]);

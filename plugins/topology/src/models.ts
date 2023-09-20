@@ -1,4 +1,13 @@
-import { GroupVersionKind } from './types/types';
+import {
+  PipelineGVK,
+  PipelineModel,
+  ModelsPlural as PipelineModelsPlural,
+  PipelineRunGVK,
+  PipelineRunModel,
+  TaskRunGVK,
+  TaskRunModel,
+} from './pipeline-models';
+import { GroupVersionKind, Model } from './types/types';
 
 export const ReplicaSetGVK: GroupVersionKind = {
   apiVersion: 'v1',
@@ -51,6 +60,18 @@ export const CronJobGVK: GroupVersionKind = {
   kind: 'CronJob',
 };
 
+export const RouteGVK: GroupVersionKind = {
+  apiVersion: 'v1',
+  apiGroup: 'route.openshift.io',
+  kind: 'Route',
+};
+
+export const CheClusterGVK: GroupVersionKind = {
+  apiVersion: 'v2',
+  apiGroup: 'org.eclipse.che',
+  kind: 'CheCluster',
+};
+
 export enum ModelsPlural {
   deployments = 'deployments',
   pods = 'pods',
@@ -61,6 +82,10 @@ export enum ModelsPlural {
   daemonsets = 'daemonsets',
   cronjobs = 'cronjobs',
   statefulsets = 'statefulsets',
+  routes = 'routes',
+  pipelines = 'pipelines',
+  pipelineruns = 'pipelineruns',
+  checlusters = 'checlusters',
 }
 
 export const resourceGVKs: { [key: string]: GroupVersionKind } = {
@@ -73,54 +98,79 @@ export const resourceGVKs: { [key: string]: GroupVersionKind } = {
   [ModelsPlural.cronjobs]: CronJobGVK,
   [ModelsPlural.jobs]: JobGVK,
   [ModelsPlural.statefulsets]: StatefulSetGVK,
+  [ModelsPlural.routes]: RouteGVK,
+  [PipelineModelsPlural.pipelineruns]: PipelineRunGVK,
+  [PipelineModelsPlural.pipelines]: PipelineGVK,
+  [PipelineModelsPlural.taskruns]: TaskRunGVK,
+  [ModelsPlural.checlusters]: CheClusterGVK,
 };
 
-export const DeploymentModel = {
+export const DeploymentModel: Model = {
   ...DeploymentGVK,
   abbr: 'D',
   labelPlural: 'Deployments',
+  color: '#004080',
 };
 
-export const PodModel = {
+export const PodModel: Model = {
   ...PodGVK,
   abbr: 'P',
   labelPlural: 'Pods',
+  color: '#009596',
 };
 
-export const ServiceModel = {
+export const ServiceModel: Model = {
   ...ServiceGVK,
   abbr: 'S',
   labelPlural: 'Services',
+  color: '#6ca100',
 };
 
-export const IngressModel = {
+export const IngressModel: Model = {
   ...IngressesGVK,
   labelPlural: 'Ingresses',
   abbr: 'I',
 };
 
-export const DaemonSetModel = {
+export const DaemonSetModel: Model = {
   ...DaemonSetGVK,
   abbr: 'DS',
   labelPlural: 'DaemonSets',
+  color: '#004080',
 };
 
-export const StatefulSetModel = {
+export const StatefulSetModel: Model = {
   ...StatefulSetGVK,
   abbr: 'SS',
   labelPlural: 'StatefulSets',
 };
 
-export const CronJobModel = {
+export const CronJobModel: Model = {
   ...CronJobGVK,
   abbr: 'CJ',
   labelPlural: 'CronJobs',
 };
 
-export const JobModel = {
+export const JobModel: Model = {
   ...JobGVK,
   abbr: 'J',
   labelPlural: 'Jobs',
+  color: '#004080',
+};
+
+export const RouteModel: Model = {
+  ...RouteGVK,
+  abbr: 'RT',
+  labelPlural: 'Routes',
+  plural: 'routes',
+  color: '#2b9af3',
+};
+
+export const CheClusterModel: Model = {
+  ...CheClusterGVK,
+  abbr: 'CC',
+  labelPlural: 'CheClusters',
+  plural: 'checlusters',
 };
 
 export const resourceModels = {
@@ -132,4 +182,9 @@ export const resourceModels = {
   [DaemonSetModel.kind]: DaemonSetModel,
   [CronJobModel.kind]: CronJobModel,
   [JobModel.kind]: JobModel,
+  [RouteModel.kind]: RouteModel,
+  [PipelineModel.kind]: PipelineModel,
+  [PipelineRunModel.kind]: PipelineRunModel,
+  [TaskRunModel.kind]: TaskRunModel,
+  [CheClusterModel.kind]: CheClusterModel,
 };

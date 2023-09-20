@@ -1,4 +1,5 @@
-import * as React from 'react';
+import React from 'react';
+
 import {
   BadgeLocation,
   DEFAULT_LAYER,
@@ -10,11 +11,15 @@ import {
   ScaleDetailsLevel,
   TOP_LAYER,
   useCombineRefs,
+  useHover,
   WithDragNodeProps,
   WithSelectionProps,
-  useHover,
 } from '@patternfly/react-topology';
-import { getKindStringAndAbbreviation } from '../../utils/workload-node-utils';
+import classNames from 'classnames';
+
+import { getKindAbbrColor } from '../../utils/workload-node-utils';
+
+import './BaseNode.css';
 
 type BaseNodeProps = {
   className?: string;
@@ -29,7 +34,6 @@ type BaseNodeProps = {
   badgeBorderColor?: string;
   badgeClassName?: string;
   badgeLocation?: BadgeLocation;
-  children?: React.ReactNode;
   attachments?: React.ReactNode;
   element: Node;
   hoverRef?: (node: Element) => () => void;
@@ -40,7 +44,7 @@ type BaseNodeProps = {
 } & Partial<WithSelectionProps> &
   Partial<WithDragNodeProps>;
 
-const BaseNode: React.FC<BaseNodeProps> = ({
+const BaseNode = ({
   className,
   innerRadius = 10,
   icon,
@@ -50,7 +54,7 @@ const BaseNode: React.FC<BaseNodeProps> = ({
   children,
   alertVariant,
   ...rest
-}) => {
+}: React.PropsWithChildren<BaseNodeProps>) => {
   const [hover, internalHoverRef] = useHover();
   const nodeHoverRefs = useCombineRefs(
     internalHoverRef,
@@ -63,7 +67,13 @@ const BaseNode: React.FC<BaseNodeProps> = ({
 
   const detailsLevel = element.getController().getGraph().getDetailsLevel();
   const showDetails = hover || detailsLevel !== ScaleDetailsLevel.low;
-  const kindData = kind && getKindStringAndAbbreviation(kind);
+  const kindData = kind && getKindAbbrColor(kind);
+  const badgeClassName = kindData
+    ? classNames(
+        'bs-topology-base-node-resource-icon',
+        `bs-topology-base-node-resource-icon-${kindData.kindStr.toLowerCase()}`,
+      )
+    : '';
 
   return (
     <Layer id={hover ? TOP_LAYER : DEFAULT_LAYER}>
@@ -72,20 +82,22 @@ const BaseNode: React.FC<BaseNodeProps> = ({
         data-test-id={element.getLabel()}
       >
         <DefaultNode
+          className={classNames('bs-topology-base-node', className)}
           element={element}
           showLabel={showDetails}
           scaleNode={hover && detailsLevel !== ScaleDetailsLevel.high}
           badge={kindData && kindData.kindAbbr}
           badgeColor={kindData && kindData.kindColor}
+          badgeTextColor="var(--pf-v5-global--palette--white)"
           showStatusBackground={!showDetails}
-          className={className}
+          badgeClassName={badgeClassName}
           {...rest}
         >
           <g data-test-id="base-node-handler">
             {icon && showDetails && (
               <>
                 <circle
-                  fill="var(--pf-global--palette--white)"
+                  fill="var(--pf-v5-global--palette--white)"
                   cx={cx}
                   cy={cy}
                   r={innerRadius + 6}
@@ -99,7 +111,7 @@ const BaseNode: React.FC<BaseNodeProps> = ({
                 />
               </>
             )}
-            {showDetails && children}
+            <g data-id="detail-children">{showDetails && children}</g>
           </g>
         </DefaultNode>
       </g>

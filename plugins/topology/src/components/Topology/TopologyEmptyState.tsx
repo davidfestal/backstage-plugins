@@ -1,23 +1,25 @@
-import * as React from 'react';
+import React from 'react';
+
 import {
   EmptyState,
+  EmptyStateHeader,
   EmptyStateIcon,
   EmptyStateVariant,
-  Title,
 } from '@patternfly/react-core';
 import { TopologyIcon } from '@patternfly/react-icons';
 
-export const TopologyEmptyState: React.FC = () => {
+export const TopologyEmptyState = () => {
   return (
     <EmptyState
       variant={EmptyStateVariant.full}
       isFullHeight
       className="pf-topology-visualization-surface"
     >
-      <EmptyStateIcon variant="container" component={TopologyIcon} />
-      <Title headingLevel="h3" size="lg">
-        No resources found
-      </Title>
+      <EmptyStateHeader
+        titleText="No resources found"
+        icon={<EmptyStateIcon icon={TopologyIcon} />}
+        headingLevel="h3"
+      />
     </EmptyState>
   );
 };

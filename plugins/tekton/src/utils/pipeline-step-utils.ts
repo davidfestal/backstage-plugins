@@ -1,6 +1,7 @@
-import { ComputedStatus, TerminatedReasons } from '../types/computedStatus';
+import { ComputedStatus, TerminatedReasons } from '@janus-idp/shared-react';
+
 import { StepStatus, TaskStatus, TaskStatusStep } from '../types/taskRun';
-import { calculateDuration } from './pipelineRun-utils';
+import { calculateDuration } from './tekton-utils';
 
 const getMatchingStepDuration = (matchingStep?: TaskStatusStep) => {
   if (!matchingStep) return '';
@@ -40,7 +41,7 @@ export const createStepStatus = (
   let stepRunStatus = ComputedStatus.PipelineNotStarted;
   let duration = null;
 
-  if (!status || !status.reason) {
+  if (!status?.reason) {
     stepRunStatus = ComputedStatus.Cancelled;
   } else if (status.reason === ComputedStatus['In Progress']) {
     // In progress, try to get granular statuses

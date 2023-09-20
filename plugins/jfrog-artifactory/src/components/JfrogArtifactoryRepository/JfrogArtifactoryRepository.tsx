@@ -1,12 +1,16 @@
-import { useApi } from '@backstage/core-plugin-api';
 import React, { useState } from 'react';
 import { useAsync } from 'react-use';
+
 import { Link, Progress, Table } from '@backstage/core-components';
-import { columns, useStyles } from './tableHeading';
-import { Edge } from '../../types';
-import { jfrogArtifactoryApiRef } from '../../api';
-import { formatDate, formatSize } from '../utils';
+import { useApi } from '@backstage/core-plugin-api';
+
 import { Box, Chip, makeStyles } from '@material-ui/core';
+
+import { formatByteSize, formatDate } from '@janus-idp/shared-react';
+
+import { jfrogArtifactoryApiRef } from '../../api';
+import { Edge } from '../../types';
+import { columns, useStyles } from './tableHeading';
 
 const useLocalStyles = makeStyles({
   chip: {
@@ -19,15 +23,15 @@ const useLocalStyles = makeStyles({
   },
 });
 
-export function JfrogArtifactoryRepository(props: RepositoryProps) {
+export function JfrogArtifactoryRepository({ image }: RepositoryProps) {
   const jfrogArtifactoryClient = useApi(jfrogArtifactoryApiRef);
   const classes = useStyles();
   const localClasses = useLocalStyles();
   const [edges, setEdges] = useState<Edge[]>([]);
-  const title = `Jfrog Artifactory repository: ${props.image}`;
+  const titleprop = `Jfrog Artifactory repository: ${image}`;
 
   const { loading } = useAsync(async () => {
-    const tagsResponse = await jfrogArtifactoryClient.getTags(props.image);
+    const tagsResponse = await jfrogArtifactoryClient.getTags(image);
 
     setEdges(tagsResponse.data.versions.edges);
 
@@ -45,7 +49,7 @@ export function JfrogArtifactoryRepository(props: RepositoryProps) {
     return {
       name: edge.node.name,
       last_modified: formatDate(edge.node.modified),
-      size: formatSize(Number(edge.node.size)),
+      size: formatByteSize(Number(edge.node.size)),
       manifest_digest: (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Chip label="sha256" className={localClasses.chip} />
@@ -62,7 +66,7 @@ export function JfrogArtifactoryRepository(props: RepositoryProps) {
   return (
     <div style={{ border: '1px solid #ddd' }}>
       <Table
-        title={title}
+        title={titleprop}
         options={{ paging: true, padding: 'dense' }}
         data={data}
         columns={columns}
@@ -77,11 +81,6 @@ export function JfrogArtifactoryRepository(props: RepositoryProps) {
   );
 }
 
-JfrogArtifactoryRepository.defaultProps = {
-  title: 'Docker Images',
-};
 interface RepositoryProps {
-  widget: boolean;
   image: string;
-  title: string;
 }

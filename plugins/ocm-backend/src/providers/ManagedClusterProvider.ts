@@ -14,31 +14,35 @@
  * limitations under the License.
  */
 
-import { ResourceEntity } from '@backstage/catalog-model';
-import * as winston from 'winston';
+import { PluginTaskScheduler, TaskRunner } from '@backstage/backend-tasks';
+import {
+  ANNOTATION_LOCATION,
+  ANNOTATION_ORIGIN_LOCATION,
+  ResourceEntity,
+} from '@backstage/catalog-model';
 import { Config } from '@backstage/config';
 import {
   EntityProvider,
   EntityProviderConnection,
 } from '@backstage/plugin-catalog-node';
-import {
-  ANNOTATION_ORIGIN_LOCATION,
-  ANNOTATION_LOCATION,
-  ANNOTATION_KUBERNETES_API_SERVER,
-} from '@backstage/catalog-model';
+import { ANNOTATION_KUBERNETES_API_SERVER } from '@backstage/plugin-kubernetes-common';
+
 import { CustomObjectsApi } from '@kubernetes/client-node';
+import * as winston from 'winston';
+
 import {
-  getManagedCluster,
-  listManagedClusters,
-  hubApiClient,
-} from '../helpers/kubernetes';
+  ANNOTATION_CLUSTER_ID,
+  ANNOTATION_PROVIDER_ID,
+} from '@janus-idp/backstage-plugin-ocm-common';
+
 import { CONSOLE_CLAIM, HUB_CLUSTER_NAME_IN_OCM } from '../constants';
-import { getClaim, translateOCMToResource } from '../helpers/parser';
 import { readOcmConfigs } from '../helpers/config';
 import {
-  ANNOTATION_PROVIDER_ID,
-  ANNOTATION_CLUSTER_ID,
-} from '@janus-idp/backstage-plugin-ocm-common';
+  getManagedCluster,
+  hubApiClient,
+  listManagedClusters,
+} from '../helpers/kubernetes';
+import { getClaim, translateOCMToResource } from '../helpers/parser';
 
 /**
  * Provides OpenShift cluster resource entities from Open Cluster Management.
@@ -49,6 +53,7 @@ export class ManagedClusterProvider implements EntityProvider {
   protected readonly id: string;
   protected readonly owner: string;
   protected readonly logger: winston.Logger;
+  private readonly scheduleFn: () => Promise<void>;
   protected connection?: EntityProviderConnection;
 
   protected constructor(
@@ -57,28 +62,64 @@ export class ManagedClusterProvider implements EntityProvider {
     id: string,
     options: { logger: winston.Logger },
     owner: string,
+    taskRunner: TaskRunner,
   ) {
     this.client = client;
     this.hubResourceName = hubResourceName;
     this.id = id;
     this.logger = options.logger;
     this.owner = owner;
+    this.scheduleFn = this.createScheduleFn(taskRunner);
   }
 
-  static fromConfig(config: Config, options: { logger: winston.Logger }) {
+  static fromConfig(
+    config: Config,
+    options: {
+      logger: winston.Logger;
+      schedule?: TaskRunner;
+      scheduler?: PluginTaskScheduler;
+    },
+  ) {
     return readOcmConfigs(config).map(provider => {
       const client = hubApiClient(provider, options.logger);
+      const taskRunner =
+        options.schedule ||
+        options.scheduler!.createScheduledTaskRunner(provider.schedule!);
+
+      if (!options.schedule && !provider.schedule) {
+        throw new Error(
+          `No schedule provided neither via code nor config for "${provider.id}" hub.`,
+        );
+      }
+
       return new ManagedClusterProvider(
         client,
         provider.hubResourceName,
         provider.id,
         options,
         provider.owner,
+        taskRunner,
       );
     });
   }
   public async connect(connection: EntityProviderConnection): Promise<void> {
     this.connection = connection;
+    await this.scheduleFn();
+  }
+
+  private createScheduleFn(taskRunner: TaskRunner): () => Promise<void> {
+    return async () => {
+      return taskRunner.run({
+        id: `run_ocm_refresh_${this.getProviderName()}`,
+        fn: async () => {
+          try {
+            await this.run();
+          } catch (error) {
+            this.logger.error(error);
+          }
+        },
+      });
+    };
   }
 
   getProviderName(): string {
@@ -135,8 +176,9 @@ export class ManagedClusterProvider implements EntityProvider {
               title: 'OCM Console',
             },
             {
-              url: `https://console.redhat.com/openshift/details/s/${i.metadata!
-                .labels!.clusterID!}`,
+              url: `https://console.redhat.com/openshift/details/s/${
+                i.metadata!.labels!.clusterID
+              }`,
               title: 'OpenShift Cluster Manager',
             },
           ],

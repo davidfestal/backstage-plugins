@@ -2,10 +2,14 @@ import {
   mockK8sResourcesData,
   mockKubernetesResponse,
 } from '../__fixtures__/1-deployments';
+import { RouteKind } from '../types/route';
 import {
+  getCheCluster,
   getIngressesDataForResourceServices,
   getIngressURLForResource,
   getIngressWebURL,
+  getRoutesDataForResourceServices,
+  getRouteWebURL,
   getServicesForResource,
 } from './resource-utils';
 
@@ -128,5 +132,44 @@ describe('ResourceUtils:: ingress', () => {
       mockKubernetesResponse.deployments[2] as any,
     );
     expect(url).toBeUndefined();
+  });
+});
+
+describe('ResourceUtils:: Routes', () => {
+  it('should return routes for associated service names', () => {
+    const routesData = getRoutesDataForResourceServices(
+      mockK8sResourcesData.watchResourcesData as any,
+      mockKubernetesResponse.deployments[0] as any,
+    );
+    expect(routesData).toEqual([
+      {
+        route: mockKubernetesResponse.routes[0],
+        url: 'https://nodejs-ex-git-jai-test.apps.viraj-22-05-2023-0.devcluster.openshift.com',
+      },
+    ]);
+  });
+
+  it('should return no routes for associated service name for no match', () => {
+    const routesData = getRoutesDataForResourceServices(
+      mockK8sResourcesData.watchResourcesData as any,
+      mockKubernetesResponse.deployments[2] as any,
+    );
+    expect(routesData).toEqual([]);
+  });
+
+  it('should return URL for provided route resource', () => {
+    const URL = getRouteWebURL(mockKubernetesResponse.routes[0] as RouteKind);
+    expect(URL).toEqual(
+      'https://nodejs-ex-git-jai-test.apps.viraj-22-05-2023-0.devcluster.openshift.com',
+    );
+  });
+});
+
+describe('ResourceUtils:: CheCluster', () => {
+  it('should return cheCluster from openshift-devspaces ns', () => {
+    const cheCluster = getCheCluster({
+      checlusters: { data: mockKubernetesResponse.checlusters },
+    } as any);
+    expect(cheCluster).toEqual(mockKubernetesResponse.checlusters[0]);
   });
 });

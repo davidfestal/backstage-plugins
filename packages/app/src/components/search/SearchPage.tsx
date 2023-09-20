@@ -1,22 +1,5 @@
 import React from 'react';
-import { makeStyles, Theme, Grid, List, Paper } from '@material-ui/core';
 
-import { CatalogSearchResultListItem } from '@backstage/plugin-catalog';
-import {
-  catalogApiRef,
-  CATALOG_FILTER_EXISTS,
-} from '@backstage/plugin-catalog-react';
-import { TechDocsSearchResultListItem } from '@backstage/plugin-techdocs';
-
-import { SearchType } from '@backstage/plugin-search';
-import {
-  DefaultResultListItem,
-  SearchBar,
-  SearchFilter,
-  SearchResult,
-  SearchPagination,
-  useSearch,
-} from '@backstage/plugin-search-react';
 import {
   CatalogIcon,
   Content,
@@ -25,6 +8,22 @@ import {
   Page,
 } from '@backstage/core-components';
 import { useApi } from '@backstage/core-plugin-api';
+import { CatalogSearchResultListItem } from '@backstage/plugin-catalog';
+import {
+  CATALOG_FILTER_EXISTS,
+  catalogApiRef,
+} from '@backstage/plugin-catalog-react';
+import { SearchType } from '@backstage/plugin-search';
+import {
+  SearchBar,
+  SearchFilter,
+  SearchPagination,
+  SearchResult,
+  useSearch,
+} from '@backstage/plugin-search-react';
+import { TechDocsSearchResultListItem } from '@backstage/plugin-techdocs';
+
+import { Grid, makeStyles, Paper, Theme } from '@material-ui/core';
 
 const useStyles = makeStyles((theme: Theme) => ({
   bar: {
@@ -112,41 +111,8 @@ const SearchPage = () => {
           <Grid item xs={9}>
             <SearchPagination />
             <SearchResult>
-              {({ results }) => (
-                <List>
-                  {results.map(({ type, document, highlight, rank }) => {
-                    switch (type) {
-                      case 'software-catalog':
-                        return (
-                          <CatalogSearchResultListItem
-                            key={document.location}
-                            result={document}
-                            highlight={highlight}
-                            rank={rank}
-                          />
-                        );
-                      case 'techdocs':
-                        return (
-                          <TechDocsSearchResultListItem
-                            key={document.location}
-                            result={document}
-                            highlight={highlight}
-                            rank={rank}
-                          />
-                        );
-                      default:
-                        return (
-                          <DefaultResultListItem
-                            key={document.location}
-                            result={document}
-                            highlight={highlight}
-                            rank={rank}
-                          />
-                        );
-                    }
-                  })}
-                </List>
-              )}
+              <CatalogSearchResultListItem icon={<CatalogIcon />} />
+              <TechDocsSearchResultListItem icon={<DocsIcon />} />
             </SearchResult>
           </Grid>
         </Grid>

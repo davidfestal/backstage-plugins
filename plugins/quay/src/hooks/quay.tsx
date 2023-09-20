@@ -1,12 +1,16 @@
-import { Entity } from '@backstage/catalog-model';
-import { useApi } from '@backstage/core-plugin-api';
-import { Box, Chip, makeStyles } from '@material-ui/core';
 import React, { useMemo } from 'react';
 import { useAsync } from 'react-use';
-import { quayApiRef } from '../api';
-import { formatDate, formatSize } from '../lib/utils';
-import { Layer, Tag } from '../types';
+
+import { Entity } from '@backstage/catalog-model';
+import { useApi } from '@backstage/core-plugin-api';
 import { useEntity } from '@backstage/plugin-catalog-react';
+
+import { Box, Chip, makeStyles } from '@material-ui/core';
+
+import { formatByteSize, formatDate } from '@janus-idp/shared-react';
+
+import { quayApiRef } from '../api';
+import { Layer, Tag } from '../types';
 
 const useLocalStyles = makeStyles({
   chip: {
@@ -62,7 +66,7 @@ export const useTags = (organization: string, repository: string) => {
       return {
         name: tag.name,
         last_modified: formatDate(tag.last_modified),
-        size: formatSize(tag.size),
+        size: formatByteSize(tag.size),
         manifest_digest: (
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Chip label={hashFunc} className={localClasses.chip} />

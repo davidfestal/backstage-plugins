@@ -1,4 +1,5 @@
-import * as React from 'react';
+import React from 'react';
+
 import {
   action,
   Controller,
@@ -11,9 +12,7 @@ type TopologyControlBarProps = {
   controller: Controller;
 };
 
-export const TopologyControlBar: React.FC<TopologyControlBarProps> = ({
-  controller,
-}) => (
+export const TopologyControlBar = ({ controller }: TopologyControlBarProps) => (
   <PfTopologyControlBar
     controlButtons={createTopologyControlButtons({
       ...defaultControlButtonsOptions,

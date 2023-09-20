@@ -1,15 +1,21 @@
 import { ObjectsByEntityResponse } from '@backstage/plugin-kubernetes-common';
+
 import { V1Service } from '@kubernetes/client-node';
+
 import { INSTANCE_LABEL } from '../const';
-import { ModelsPlural, resourceGVKs } from '../models';
+import { ModelsPlural, resourceGVKs, resourceModels } from '../models';
 import { IngressesData } from '../types/ingresses';
+import { JobsData } from '../types/jobs';
+import { PipelinesData } from '../types/pipeline';
 import { PodRCData } from '../types/pods';
+import { RoutesData } from '../types/route';
 import { OverviewItem, TopologyDataObject } from '../types/topology-types';
 import {
-  K8sWorkloadResource,
-  K8sResponseData,
   ClusterErrors,
+  K8sResponseData,
+  K8sWorkloadResource,
 } from '../types/types';
+import { getImageForIconClass } from './icons';
 
 export const WORKLOAD_TYPES: string[] = [
   ModelsPlural.deployments,
@@ -40,24 +46,53 @@ export const getClusters = (k8sObjects: ObjectsByEntityResponse) => {
   return { clusters, errors };
 };
 
+export const getCustomResourceKind = (resource: any): string => {
+  if (resource.kind) {
+    return resource.kind;
+  }
+
+  if (resource.spec.host && resource.status.ingress) {
+    return 'Route';
+  }
+  return '';
+};
+
 export const getK8sResources = (
   cluster: number,
   k8sObjects: ObjectsByEntityResponse,
 ) =>
   k8sObjects.items?.[cluster]?.resources?.reduce(
-    (acc: K8sResponseData, res: any) => ({
-      ...acc,
-      [res.type]: {
-        data:
-          (resourceGVKs[res.type] &&
-            res.resources.map((rval: K8sWorkloadResource) => ({
-              ...rval,
-              kind: workloadKind(res.type),
-              apiVersion: apiVersionForWorkloadType(res.type),
-            }))) ??
-          [],
-      },
-    }),
+    (acc: K8sResponseData, res: any) => {
+      if (res.type === 'customresources' && res.resources.length > 0) {
+        const customResKind = getCustomResourceKind(res.resources[0]);
+        const customResKnownModel = resourceModels[customResKind];
+        return customResKnownModel?.plural
+          ? {
+              ...acc,
+              [customResKnownModel.plural]: {
+                data: res.resources.map((rval: K8sWorkloadResource) => ({
+                  ...rval,
+                  kind: customResKind,
+                  apiVersion: apiVersionForWorkloadType(customResKind),
+                })),
+              },
+            }
+          : acc;
+      }
+      return {
+        ...acc,
+        [res.type]: {
+          data:
+            (resourceGVKs[res.type] &&
+              res.resources.map((rval: K8sWorkloadResource) => ({
+                ...rval,
+                kind: workloadKind(res.type),
+                apiVersion: apiVersionForWorkloadType(res.type),
+              }))) ??
+            [],
+        },
+      };
+    },
     {},
   );
 
@@ -74,10 +109,24 @@ export const createTopologyNodeData = (
     podsData?: PodRCData;
     services?: V1Service[];
     ingressesData?: IngressesData;
+    jobsData?: JobsData;
+    routesData?: RoutesData;
+    pipelinesData?: PipelinesData | null;
+    cheCluster?: any;
   },
 ): TopologyDataObject => {
   const dcUID = resource.metadata?.uid;
   const deploymentsLabels = resource.metadata?.labels ?? {};
+  const resAnnotations = resource.metadata?.annotations;
+
+  const builderImageIcon =
+    getImageForIconClass(
+      `icon-${deploymentsLabels['app.openshift.io/runtime']}`,
+    ) ||
+    getImageForIconClass(
+      `icon-${deploymentsLabels['app.kubernetes.io/name']}`,
+    ) ||
+    getImageForIconClass(defaultIcon);
 
   return {
     id: dcUID as string,
@@ -89,8 +138,11 @@ export const createTopologyNodeData = (
     },
     data: {
       kind: resource?.kind,
-      builderImage: defaultIcon,
+      builderImage: builderImageIcon,
       url,
+      editURL: resAnnotations?.['app.openshift.io/edit-url'],
+      vcsURI: resAnnotations?.['app.openshift.io/vcs-uri'],
+      vcsRef: resAnnotations?.['app.openshift.io/vcs-ref'],
       ...resourcesData,
     },
   };

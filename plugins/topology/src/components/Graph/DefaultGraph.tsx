@@ -1,10 +1,11 @@
-import * as React from 'react';
+import React from 'react';
+
 import {
-  GraphElement,
   Graph,
-  observer,
   GraphComponent,
+  GraphElement,
   isGraph,
+  observer,
   WithPanZoomProps,
   WithSelectionProps,
 } from '@patternfly/react-topology';
@@ -14,10 +15,7 @@ type DefaultGraphProps = {
 } & Partial<WithPanZoomProps> &
   Partial<WithSelectionProps>;
 
-const DefaultGraph: React.FunctionComponent<DefaultGraphProps> = ({
-  element,
-  ...rest
-}) => {
+const DefaultGraph = ({ element, ...rest }: DefaultGraphProps) => {
   if (!isGraph) {
     return null;
   }

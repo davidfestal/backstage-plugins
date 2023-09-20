@@ -1,12 +1,13 @@
-import * as React from 'react';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { observer } from 'mobx-react';
+import React from 'react';
+
 import { Tooltip } from '@patternfly/react-core';
 import {
   DEFAULT_LAYER,
   DEFAULT_WHEN_OFFSET,
+  GraphElement,
   Layer,
   Node,
+  RunStatus,
   ScaleDetailsLevel,
   TaskNode,
   TOP_LAYER,
@@ -15,15 +16,24 @@ import {
   WhenDecorator,
   WithContextMenuProps,
   WithSelectionProps,
-  GraphElement,
-  RunStatus,
 } from '@patternfly/react-topology';
-import { PipelineTaskWithStatus } from '../../types/pipelineRun';
-import { StepStatus } from '../../types/taskRun';
-import { getTaskStatus } from '../../utils/pipelineRun-utils';
-import { PipelineVisualizationStepList } from './PipelineVisualizationStepList';
-import { createStepStatus } from '../../utils/pipeline-step-utils';
+// eslint-disable-next-line @backstage/no-undeclared-imports
+import { observer } from 'mobx-react';
+
+import { PipelineTaskWithStatus, TaskRunKind } from '@janus-idp/shared-react';
+
 import { NodeType } from '../../consts/pipeline-topology-const';
+import {
+  TEKTON_PIPELINE_RUN,
+  TEKTON_PIPELINE_TASK,
+} from '../../consts/tekton-const';
+import { TektonResourcesContext } from '../../hooks/TektonResourcesContext';
+import { StepStatus } from '../../types/taskRun';
+import { TektonResourcesContextData } from '../../types/types';
+import { createStepStatus } from '../../utils/pipeline-step-utils';
+import { getTaskStatus } from '../../utils/pipelineRun-utils';
+import PipelineRunLogDialog from '../PipelineRunLogs/PipelineRunLogDialog';
+import { PipelineVisualizationStepList } from './PipelineVisualizationStepList';
 
 import './PipelineTaskNode.css';
 
@@ -33,16 +43,33 @@ type PipelineTaskNodeProps = {
   WithSelectionProps &
   GraphElement;
 
-const PipelineTaskNode: React.FunctionComponent<PipelineTaskNodeProps> = ({
+const PipelineTaskNode = ({
   element,
   onContextMenu,
   contextMenuOpen,
   ...rest
-}) => {
+}: PipelineTaskNodeProps) => {
+  const [open, setOpen] = React.useState<boolean>(false);
+  const { watchResourcesData } = React.useContext<TektonResourcesContextData>(
+    TektonResourcesContext,
+  );
   const data = element.getData();
+  const triggerRef = React.useRef<SVGGElement | null>(null);
+
+  const pipelineRun = data.pipelineRun;
   const [hover, hoverRef] = useHover();
   const detailsLevel = useDetailsLevel();
   const isFinallyTask = element.getType() === NodeType.FINALLY_NODE;
+
+  const pods = watchResourcesData?.pods?.data || [];
+  const taskRuns = watchResourcesData?.taskruns?.data || [];
+  const openDialog = () => {
+    setOpen(true);
+  };
+
+  const closeDialog = () => {
+    setOpen(false);
+  };
 
   const computedTask: PipelineTaskWithStatus = data.task;
   const stepList =
@@ -50,7 +77,7 @@ const PipelineTaskNode: React.FunctionComponent<PipelineTaskNodeProps> = ({
 
   const taskStatus = getTaskStatus(data.pipelineRun, data.task);
 
-  const stepStatusList: StepStatus[] = stepList.map(step =>
+  const stepStatusList: StepStatus[] = stepList.map((step: { name: string }) =>
     createStepStatus(step, taskStatus),
   );
   const succeededStepsCount = stepStatusList.filter(
@@ -84,24 +111,41 @@ const PipelineTaskNode: React.FunctionComponent<PipelineTaskNodeProps> = ({
       }
     />
   ) : null;
+  const activeTaskId = taskRuns.find(
+    (tr: TaskRunKind) =>
+      tr?.metadata?.labels?.[TEKTON_PIPELINE_RUN] ===
+        pipelineRun?.metadata?.name &&
+      tr?.metadata?.labels?.[TEKTON_PIPELINE_TASK] === data.task?.name,
+  )?.metadata?.name;
 
   const taskNode = (
-    <TaskNode
-      className="bs-tkn-pipeline-task-node"
-      element={element}
-      onContextMenu={data.showContextMenu ? onContextMenu : undefined}
-      contextMenuOpen={contextMenuOpen}
-      scaleNode={
-        (hover || contextMenuOpen) && detailsLevel !== ScaleDetailsLevel.high
-      }
-      hideDetailsAtMedium
-      {...passedData}
-      {...rest}
-      badge={badge}
-      truncateLength={element.getData()?.label?.length}
-    >
-      {whenDecorator}
-    </TaskNode>
+    <>
+      <PipelineRunLogDialog
+        pipelineRun={pipelineRun}
+        open={open}
+        closeDialog={closeDialog}
+        pods={pods}
+        taskRuns={taskRuns}
+        activeTask={activeTaskId}
+      />
+      <TaskNode
+        className="bs-tkn-pipeline-task-node"
+        element={element}
+        onContextMenu={data.showContextMenu ? onContextMenu : undefined}
+        contextMenuOpen={contextMenuOpen}
+        scaleNode={
+          (hover || contextMenuOpen) && detailsLevel !== ScaleDetailsLevel.high
+        }
+        hideDetailsAtMedium
+        {...passedData}
+        {...rest}
+        badge={badge}
+        truncateLength={element.getData()?.label?.length}
+        onSelect={activeTaskId && openDialog}
+      >
+        {whenDecorator}
+      </TaskNode>
+    </>
   );
 
   return (
@@ -128,8 +172,9 @@ const PipelineTaskNode: React.FunctionComponent<PipelineTaskNodeProps> = ({
               isFinallyTask={isFinallyTask}
             />
           }
+          triggerRef={triggerRef}
         >
-          {taskNode}
+          <g ref={triggerRef}>{taskNode}</g>
         </Tooltip>
       </g>
     </Layer>

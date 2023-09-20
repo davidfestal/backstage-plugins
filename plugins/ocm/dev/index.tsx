@@ -1,23 +1,24 @@
 import React from 'react';
+
+import { Entity } from '@backstage/catalog-model';
+import { createApiFactory } from '@backstage/core-plugin-api';
 import { createDevApp } from '@backstage/dev-utils';
-import { ocmPlugin, OcmPage } from '../src/plugin';
+import { CatalogEntityPage } from '@backstage/plugin-catalog';
 import {
   CatalogApi,
-  EntityProvider,
   catalogApiRef,
+  EntityProvider,
 } from '@backstage/plugin-catalog-react';
-import { createApiFactory } from '@backstage/core-plugin-api';
 import { SearchApi, searchApiRef } from '@backstage/plugin-search-react';
-import { Entity } from '@backstage/catalog-model';
-import { CatalogEntityPage } from '@backstage/plugin-catalog';
+
 import { Grid } from '@material-ui/core';
+
 import {
-  ClusterAllocatableResourceCard,
   ClusterAvailableResourceCard,
   ClusterContextProvider,
   ClusterInfoCard,
-  ClusterStatusCard,
 } from '../src';
+import { OcmPage, ocmPlugin } from '../src/plugin';
 
 const clusterEntity = (name: string): Entity => ({
   apiVersion: 'backstage.io/v1beta1',
@@ -32,23 +33,15 @@ const clusterEntity = (name: string): Entity => ({
   },
 });
 
-const clusterEntityPage = (name: string): JSX.Element => (
+const clusterEntityPage = (name: string): React.JSX.Element => (
   <EntityProvider entity={clusterEntity(name)}>
     <ClusterContextProvider>
-      <Grid container>
-        <Grid container item direction="column" xs={3}>
-          <Grid item>
-            <ClusterStatusCard />
-          </Grid>
-          <Grid item>
-            <ClusterAllocatableResourceCard />
-          </Grid>
-          <Grid item>
-            <ClusterAvailableResourceCard />
-          </Grid>
-        </Grid>
-        <Grid item xs>
+      <Grid container direction="column" xs={6}>
+        <Grid item>
           <ClusterInfoCard />
+        </Grid>
+        <Grid item>
+          <ClusterAvailableResourceCard />
         </Grid>
       </Grid>
     </ClusterContextProvider>
@@ -75,7 +68,7 @@ createDevApp()
         async getEntityByRef(ref: string) {
           return clusters.find(e => e.metadata.name === ref);
         },
-      } as CatalogApi),
+      }) as CatalogApi,
   })
   .registerApi(
     createApiFactory({
@@ -86,7 +79,7 @@ createDevApp()
           async query() {
             return new Promise(() => {});
           },
-        } as SearchApi),
+        }) as SearchApi,
     }),
   )
   .registerPlugin(ocmPlugin)

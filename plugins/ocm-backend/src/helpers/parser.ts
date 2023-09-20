@@ -1,16 +1,19 @@
-import { CONSOLE_CLAIM, HUB_CLUSTER_NAME_IN_OCM } from '../constants';
+import { maxSatisfying } from 'semver';
+
 import {
   ClusterDetails,
+  ClusterNodesStatus,
   ClusterStatus,
 } from '@janus-idp/backstage-plugin-ocm-common';
-import { maxSatisfying } from 'semver';
+
+import { CONSOLE_CLAIM, HUB_CLUSTER_NAME_IN_OCM } from '../constants';
 import { ClusterClaim, ManagedCluster, ManagedClusterInfo } from '../types';
 
 const convertCpus = (cpus: string | undefined): number | undefined => {
   if (!cpus) {
     return undefined;
   }
-  if (cpus.slice(-1) === 'm') {
+  if (cpus.endsWith('m')) {
     return parseInt(cpus.slice(0, cpus.length - 1), 10) / 1000;
   }
   return parseInt(cpus, 10);
@@ -86,6 +89,18 @@ export const parseUpdateInfo = (clusterInfo: ManagedClusterInfo) => {
     },
   };
 };
+
+export const parseNodeStatus = (clusterInfo: ManagedClusterInfo) =>
+  clusterInfo.status?.nodeList?.map(node => {
+    if (node.conditions.length !== 1) {
+      throw new Error('Found more node conditions then one');
+    }
+    const condition = node.conditions[0];
+    return {
+      status: condition.status,
+      type: condition.type,
+    } as ClusterNodesStatus;
+  }) || [];
 
 export const translateResourceToOCM = (
   clusterName: string,

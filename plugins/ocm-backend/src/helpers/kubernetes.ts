@@ -4,7 +4,9 @@ import {
   KubernetesListObject,
 } from '@kubernetes/client-node';
 import { Logger } from 'winston';
+
 import http from 'http';
+
 import { ManagedCluster, ManagedClusterInfo, OcmConfig } from '../types';
 
 export const hubApiClient = (
@@ -110,6 +112,16 @@ export const getManagedClusterInfo = (api: CustomObjectsApi, name: string) => {
       name,
       'managedclusterinfos',
       name,
+    ),
+  );
+};
+
+export const listManagedClusterInfos = (api: CustomObjectsApi) => {
+  return kubeApiResponseHandler<KubernetesListObject<ManagedClusterInfo>>(
+    api.listClusterCustomObject(
+      'internal.open-cluster-management.io',
+      'v1beta1',
+      'managedclusterinfos',
     ),
   );
 };

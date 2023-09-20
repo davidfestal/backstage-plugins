@@ -1,26 +1,21 @@
-import * as React from 'react';
 import {
-  GraphElement,
-  ComponentFactory,
-  withDragNode,
-  withSelection,
   ModelKind,
+  withDragNode,
   withPanZoom,
+  withSelection,
 } from '@patternfly/react-topology';
-import GroupNode from './GroupNode';
-import EdgeConnect from './EdgeConnect';
-import WorkloadNode from './WorkloadNode';
+
 import {
   TYPE_APPLICATION_GROUP,
   TYPE_CONNECTS_TO,
   TYPE_WORKLOAD,
 } from '../../const';
 import DefaultGraph from './DefaultGraph';
+import EdgeConnect from './EdgeConnect';
+import GroupNode from './GroupNode';
+import WorkloadNode from './WorkloadNode';
 
-const TopologyComponentFactory: ComponentFactory = (
-  kind: ModelKind,
-  type: string,
-): React.ComponentType<{ element: GraphElement }> | undefined => {
+const TopologyComponentFactory = (kind: ModelKind, type: string) => {
   if (kind === ModelKind.graph) {
     return withPanZoom()(withSelection()(DefaultGraph));
   }

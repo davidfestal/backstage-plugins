@@ -1,13 +1,15 @@
 import {
-  DiscoveryApi,
   ConfigApi,
   createApiRef,
+  DiscoveryApi,
+  IdentityApi,
 } from '@backstage/core-plugin-api';
+
 import {
-  TagsResponse,
   LabelsResponse,
   ManifestByDigestResponse,
   SecurityDetailsResponse,
+  TagsResponse,
 } from '../types';
 
 const DEFAULT_PROXY_PATH = '/quay/api';
@@ -39,6 +41,7 @@ export const quayApiRef = createApiRef<QuayApiV1>({
 export type Options = {
   discoveryApi: DiscoveryApi;
   configApi: ConfigApi;
+  identityApi: IdentityApi;
 };
 
 export class QuayApiClient implements QuayApiV1 {
@@ -47,9 +50,12 @@ export class QuayApiClient implements QuayApiV1 {
 
   private readonly configApi: ConfigApi;
 
+  private readonly identityApi: IdentityApi;
+
   constructor(options: Options) {
     this.discoveryApi = options.discoveryApi;
     this.configApi = options.configApi;
+    this.identityApi = options.identityApi;
   }
 
   private async getBaseUrl() {
@@ -59,8 +65,12 @@ export class QuayApiClient implements QuayApiV1 {
   }
 
   private async fetcher(url: string) {
+    const { token: idToken } = await this.identityApi.getCredentials();
     const response = await fetch(url, {
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(idToken && { Authorization: `Bearer ${idToken}` }),
+      },
     });
     if (!response.ok) {
       throw new Error(

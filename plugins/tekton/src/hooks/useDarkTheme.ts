@@ -1,8 +1,9 @@
-import * as React from 'react';
+import React from 'react';
+
 import { useTheme } from '@material-ui/core/styles';
 
 const THEME_DARK = 'dark';
-const THEME_DARK_CLASS = 'pf-theme-dark';
+const THEME_DARK_CLASS = 'pf-v5-theme-dark';
 
 export const useDarkTheme = () => {
   const {

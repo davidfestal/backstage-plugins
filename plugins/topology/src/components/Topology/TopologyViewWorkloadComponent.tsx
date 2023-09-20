@@ -1,23 +1,26 @@
-import * as React from 'react';
+import React from 'react';
+
+import { InfoCard, Progress } from '@backstage/core-components';
+
 import {
   BaseNode,
-  SelectionEventListener,
   SELECTION_EVENT,
+  SelectionEventListener,
   TopologyView,
   useEventListener,
   useVisualizationController,
   VisualizationSurface,
 } from '@patternfly/react-topology';
-import { Progress } from '@backstage/core-components';
-import { TopologyEmptyState } from './TopologyEmptyState';
-import { useWorkloadsWatcher } from '../../hooks/useWorkloadWatcher';
-import { TopologyControlBar } from './TopologyControlBar';
-import TopologyToolbar from './TopologyToolbar';
-import { K8sResourcesContext } from '../../hooks/K8sResourcesContext';
-import TopologyErrorPanel from './TopologyErrorPanel';
-import { ClusterErrors } from '../../types/types';
-import { useSideBar } from '../../hooks/useSideBar';
+
 import { TYPE_WORKLOAD } from '../../const';
+import { K8sResourcesContext } from '../../hooks/K8sResourcesContext';
+import { useSideBar } from '../../hooks/useSideBar';
+import { useWorkloadsWatcher } from '../../hooks/useWorkloadWatcher';
+import { ClusterErrors } from '../../types/types';
+import { TopologyControlBar } from './TopologyControlBar';
+import { TopologyEmptyState } from './TopologyEmptyState';
+import TopologyErrorPanel from './TopologyErrorPanel';
+import TopologyToolbar from './TopologyToolbar';
 
 import './TopologyToolbar.css';
 
@@ -25,17 +28,22 @@ type TopologyViewWorkloadComponentProps = {
   useToolbar?: boolean;
 };
 
-const TopologyViewWorkloadComponent: React.FC<
-  TopologyViewWorkloadComponentProps
-> = ({ useToolbar = false }) => {
-  const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
+const TopologyViewWorkloadComponent = ({
+  useToolbar = false,
+}: TopologyViewWorkloadComponentProps) => {
   const controller = useVisualizationController();
   const layout = 'ColaNoForce';
   const { loaded, dataModel } = useWorkloadsWatcher();
   const { clusters, selectedClusterErrors, responseError } =
     React.useContext(K8sResourcesContext);
-  const [sideBar, sideBarOpen, selectedId, setSideBarOpen, setSelectedNode] =
-    useSideBar(selectedIds);
+  const [
+    sideBar,
+    sideBarOpen,
+    selectedId,
+    setSideBarOpen,
+    setSelectedNode,
+    removeSelectedIdParam,
+  ] = useSideBar();
 
   const allErrors: ClusterErrors = [
     ...(responseError ? [{ message: responseError }] : []),
@@ -52,7 +60,7 @@ const TopologyViewWorkloadComponent: React.FC<
         },
         ...dataModel,
       };
-      controller.fromModel(model, false);
+      controller.fromModel(model, true);
     }
   }, [layout, loaded, dataModel, controller]);
 
@@ -70,8 +78,13 @@ const TopologyViewWorkloadComponent: React.FC<
     }
   }, [controller, dataModel, selectedId, setSelectedNode, setSideBarOpen]);
 
-  useEventListener<SelectionEventListener>(SELECTION_EVENT, ids => {
-    setSelectedIds(ids);
+  useEventListener<SelectionEventListener>(SELECTION_EVENT, (ids: string[]) => {
+    const id = ids[0] ? ids[0] : '';
+    const selNode = controller.getElementById(id) as BaseNode;
+    setSelectedNode(selNode);
+    if (!id || selNode.getType() !== TYPE_WORKLOAD) {
+      removeSelectedIdParam();
+    }
   });
 
   if (!loaded)
@@ -81,34 +94,39 @@ const TopologyViewWorkloadComponent: React.FC<
       </div>
     );
 
+  const isDataModelEmpty = loaded && dataModel?.nodes?.length === 0;
+
   return (
     <>
       {allErrors && allErrors.length > 0 && (
         <TopologyErrorPanel allErrors={allErrors} />
       )}
-      {clusters.length < 1 ? (
-        <TopologyEmptyState />
-      ) : (
-        <TopologyView
-          controlBar={
-            loaded &&
-            dataModel?.nodes?.length > 0 && (
-              <TopologyControlBar controller={controller} />
-            )
-          }
-          viewToolbar={useToolbar && <TopologyToolbar />}
-          sideBar={sideBar}
-          sideBarResizable
-          sideBarOpen={sideBarOpen}
-          minSideBarSize="400px"
-        >
-          {loaded && dataModel?.nodes?.length === 0 ? (
-            <TopologyEmptyState />
-          ) : (
-            <VisualizationSurface state={{ selectedIds }} />
-          )}
-        </TopologyView>
-      )}
+      <InfoCard className="bs-topology-wrapper" divider={false}>
+        {clusters.length < 1 ? (
+          <TopologyEmptyState />
+        ) : (
+          <TopologyView
+            controlBar={
+              !isDataModelEmpty && (
+                <TopologyControlBar controller={controller} />
+              )
+            }
+            viewToolbar={
+              useToolbar && <TopologyToolbar showFilters={!isDataModelEmpty} />
+            }
+            sideBar={sideBar}
+            sideBarResizable
+            sideBarOpen={sideBarOpen}
+            minSideBarSize="400px"
+          >
+            {loaded && dataModel?.nodes?.length === 0 ? (
+              <TopologyEmptyState />
+            ) : (
+              <VisualizationSurface state={{ selectedIds: [selectedId] }} />
+            )}
+          </TopologyView>
+        )}
+      </InfoCard>
     </>
   );
 };

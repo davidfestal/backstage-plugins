@@ -1,55 +1,56 @@
-import { flatten, uniq, minBy } from 'lodash';
-import * as dagre from 'dagre';
 import {
-  getSpacerNodes,
-  getEdgesFromNodes,
-  WhenStatus,
-  RunStatus,
-  ModelKind,
-  GraphModel,
   EdgeModel,
+  getEdgesFromNodes,
+  getSpacerNodes,
+  GraphModel,
+  ModelKind,
+  RunStatus,
+  WhenStatus,
 } from '@patternfly/react-topology';
+import * as dagre from 'dagre';
+import { minBy, uniq } from 'lodash';
+
 import {
-  NODE_HEIGHT,
-  NodeType,
-  NODE_WIDTH,
-  AddNodeDirection,
-  PipelineLayout,
-  DAGRE_BUILDER_PROPS,
-  DAGRE_VIEWER_PROPS,
-  FINALLY_NODE_PADDING,
-  FINALLY_NODE_VERTICAL_SPACING,
-  WHEN_EXPRESSION_SPACING,
-  DAGRE_VIEWER_SPACED_PROPS,
-  DAGRE_BUILDER_SPACED_PROPS,
-  NODE_PADDING,
-  DEFAULT_NODE_ICON_WIDTH,
-  DEFAULT_FINALLLY_GROUP_PADDING,
-  DEFAULT_NODE_HEIGHT,
-  DEFAULT_BADGE_WIDTH,
-  REGEX_EXTRACT_DEPS,
-} from '../consts/pipeline-topology-const';
+  ComputedStatus,
+  PipelineRunKind,
+  PipelineTask,
+  PipelineTaskParam,
+  PipelineTaskWithStatus,
+  TaskRunKind,
+} from '@janus-idp/shared-react';
+
 import { DAG, Vertex } from '../components/pipeline-topology/dag';
 import {
-  PipelineEdgeModel,
-  NodeCreator,
-  NodeCreatorSetup,
-  SpacerNodeModelData,
-  TaskListNodeModelData,
-  TaskNodeModelData,
-  PipelineMixedNodeModel,
-  PipelineTaskNodeModel,
+  DAGRE_BUILDER_PROPS,
+  DAGRE_BUILDER_SPACED_PROPS,
+  DAGRE_VIEWER_PROPS,
+  DAGRE_VIEWER_SPACED_PROPS,
+  DEFAULT_BADGE_WIDTH,
+  DEFAULT_FINALLLY_GROUP_PADDING,
+  DEFAULT_NODE_HEIGHT,
+  DEFAULT_NODE_ICON_WIDTH,
+  FINALLY_NODE_PADDING,
+  NODE_HEIGHT,
+  NODE_PADDING,
+  NODE_WIDTH,
+  NodeType,
+  PipelineLayout,
+  REGEX_EXTRACT_DEPS,
+  WHEN_EXPRESSION_SPACING,
+} from '../consts/pipeline-topology-const';
+import {
   BuilderNodeModelData,
-  PipelineRunAfterNodeModelData,
   FinallyNodeModel,
   LoadingNodeModel,
-  CheckTaskErrorMessage,
+  NodeCreator,
+  NodeCreatorSetup,
+  PipelineEdgeModel,
+  PipelineMixedNodeModel,
+  PipelineRunAfterNodeModelData,
+  TaskListNodeModelData,
+  TaskNodeModelData,
 } from '../types/pipeline-topology-types';
 import { appendPipelineRunStatus, getPLRTaskRuns } from './pipelineRun-utils';
-import { PipelineRunKind, PipelineTaskWithStatus } from '../types/pipelineRun';
-import { PipelineTask, PipelineTaskParam } from '../types/pipeline';
-import { ComputedStatus } from '../types/computedStatus';
-import { TaskRunKind } from '../types/taskRun';
 
 const createGenericNode: NodeCreatorSetup =
   (type, width?, height?) => (name, data) => ({
@@ -73,7 +74,7 @@ const getMaxFinallyNode = (finallyTaskList: PipelineTaskWithStatus[]) => {
 export const createTaskNode: NodeCreator<TaskNodeModelData> = createGenericNode(
   NodeType.TASK_NODE,
 );
-export const createSpacerNode: NodeCreator<SpacerNodeModelData> =
+export const createSpacerNode: NodeCreator<PipelineRunAfterNodeModelData> =
   createGenericNode(NodeType.SPACER_NODE, 0);
 export const createTaskListNode: NodeCreator<TaskListNodeModelData> =
   createGenericNode(NodeType.TASK_LIST_NODE);
@@ -117,189 +118,6 @@ export const getNodeCreator = (
     default:
       return createTaskNode;
   }
-};
-
-export const handleParallelToParallelNodes = (
-  nodes: PipelineMixedNodeModel[],
-): PipelineMixedNodeModel[] => {
-  type ParallelNodeReference = {
-    node: PipelineTaskNodeModel;
-    runAfter: string[];
-    atIndex: number;
-  };
-  type ParallelNodeMap = {
-    [id: string]: ParallelNodeReference[];
-  };
-
-  // Collect only multiple run-afters
-  const multipleRunBeforeMap: ParallelNodeMap = nodes.reduce(
-    (acc: ParallelNodeMap, node: PipelineMixedNodeModel, idx: number) => {
-      const {
-        data: {
-          task: { runAfter },
-        },
-      } = node;
-      if (runAfter && runAfter.length > 1) {
-        const id: string = [...runAfter]
-          .sort((a, b) => a.localeCompare(b))
-          .reduce((str, ref) => `${str}|${ref}`);
-
-        if (!Array.isArray(acc[id])) {
-          acc[id] = [];
-        }
-        acc[id].push({
-          node,
-          runAfter,
-          atIndex: idx,
-        });
-      }
-      return acc;
-    },
-    {} as ParallelNodeMap,
-  );
-
-  // Trim out single occurrences
-  const multiParallelToParallelList: ParallelNodeReference[][] = Object.values(
-    multipleRunBeforeMap,
-  ).filter((data: ParallelNodeReference[]) => data.length > 1);
-
-  if (multiParallelToParallelList.length === 0) {
-    // No parallel to parallel
-    return nodes;
-  }
-
-  // Insert a spacer node between the multiple nodes on the sides of a parallel-to-parallel
-  const newNodes: PipelineMixedNodeModel[] = [];
-  const newRunAfterNodeMap: { [nodeId: string]: string[] } = {};
-  multiParallelToParallelList.forEach((p2p: ParallelNodeReference[]) => {
-    // All nodes in each array share their runAfters
-    const { runAfter } = p2p[0];
-
-    const names: string[] = p2p.map(p2pData => p2pData.node.id);
-    const parallelSpacerName = `parallel-${names.join('-')}`;
-
-    names.forEach(p2pNodeId => {
-      if (!Array.isArray(newRunAfterNodeMap[p2pNodeId])) {
-        newRunAfterNodeMap[p2pNodeId] = [];
-      }
-      newRunAfterNodeMap[p2pNodeId].push(parallelSpacerName);
-    });
-
-    newNodes.push(
-      createSpacerNode(parallelSpacerName, {
-        task: {
-          name: parallelSpacerName,
-          runAfter,
-        },
-      }),
-    );
-  });
-
-  // Update all impacted nodes to point at the spacer node as the spacer points at their original runAfters
-  nodes.forEach(node => {
-    const newRunAfters: string[] | undefined = newRunAfterNodeMap[node.id];
-    if (newRunAfters && newRunAfters.length > 0) {
-      const {
-        data: { task },
-        type,
-      } = node;
-
-      const createNode: NodeCreator<PipelineRunAfterNodeModelData> =
-        getNodeCreator(type);
-
-      // Recreate the node with the new runAfter pointing to the spacer node
-      newNodes.push(
-        createNode(node.id, {
-          ...node.data,
-          task: {
-            ...task,
-            runAfter: newRunAfters,
-          },
-        }),
-      );
-    } else {
-      // Unaffected node, just carry it over
-      newNodes.push(node);
-    }
-  });
-
-  return newNodes;
-};
-
-export const tasksToNodes = (
-  taskList: PipelineTask[],
-  pipelineRun?: PipelineRunKind,
-): PipelineMixedNodeModel[] => {
-  const nodeList: PipelineTaskNodeModel[] = taskList.map(task =>
-    createTaskNode(task.name, {
-      task,
-      pipelineRun,
-    }),
-  );
-
-  return handleParallelToParallelNodes(nodeList);
-};
-
-export const tasksToBuilderNodes = (
-  taskList: PipelineTask[],
-  onAddNode: (task: PipelineTask, direction: AddNodeDirection) => void,
-  onNodeSelection: (task: PipelineTask) => void,
-  getError: CheckTaskErrorMessage,
-  selectedIds: string[],
-): PipelineMixedNodeModel[] => {
-  return taskList.map((task, idx) => {
-    return createBuilderNode(task.name, {
-      error: getError(idx),
-      task,
-      selected: selectedIds.includes(task.name),
-      onNodeSelection: () => {
-        onNodeSelection(task);
-      },
-      onAddNode: (direction: AddNodeDirection) => {
-        onAddNode(task, direction);
-      },
-    });
-  });
-};
-
-export const getBuilderEdgesFromNodes = (
-  nodes: PipelineMixedNodeModel[],
-): PipelineEdgeModel[] =>
-  flatten(
-    nodes.map(node => {
-      const {
-        data: {
-          task: { name: target, runAfter = [] },
-        },
-      } = node;
-
-      if (runAfter.length === 0) return null;
-
-      return runAfter.map((source: string) => ({
-        id: `${source}~to~${target}`,
-        type: 'edge',
-        source,
-        target,
-      }));
-    }),
-  ).filter(edgeList => !!edgeList);
-
-export const getFinallyTaskHeight = (
-  allTasksLength: number,
-  disableBuilder: boolean,
-): number => {
-  return (
-    allTasksLength * NODE_HEIGHT +
-    (allTasksLength - 1) * FINALLY_NODE_VERTICAL_SPACING +
-    (!disableBuilder ? NODE_HEIGHT + FINALLY_NODE_VERTICAL_SPACING : 0) +
-    FINALLY_NODE_PADDING * 2
-  );
-};
-
-export const getFinallyTaskWidth = (allTasksLength: number): number => {
-  const whenExpressionSpacing =
-    allTasksLength > 0 ? WHEN_EXPRESSION_SPACING : 0;
-  return NODE_WIDTH + FINALLY_NODE_PADDING * 2 + whenExpressionSpacing;
 };
 
 export const getTextWidth = (

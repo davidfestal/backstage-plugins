@@ -1,6 +1,9 @@
 import React from 'react';
+
 import { Link, TableColumn } from '@backstage/core-components';
+
 import makeStyles from '@material-ui/core/styles/makeStyles';
+
 import type { Layer } from '../../types';
 
 const vulnerabilitySummary = (layer?: Layer): string => {
@@ -19,9 +22,10 @@ const vulnerabilitySummary = (layer?: Layer): string => {
     });
   });
 
-  return Object.entries(summary)
+  const scanResults = Object.entries(summary)
     .map(([severity, count]) => `${severity}: ${count}`)
     .join(', ');
+  return scanResults.trim() !== '' ? scanResults : 'Passed';
 };
 
 export const columns: TableColumn[] = [
@@ -44,6 +48,7 @@ export const columns: TableColumn[] = [
       const retStr = vulnerabilitySummary(rowData.securityDetails as Layer);
       return <Link to={`tag/${tagManifest}`}>{retStr}</Link>;
     },
+    id: 'securityScan',
   },
   {
     title: 'Size',

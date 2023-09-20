@@ -1,11 +1,19 @@
+import { V1Service } from '@kubernetes/client-node';
 import { Model, NodeModel } from '@patternfly/react-topology';
+
 import { TYPE_APPLICATION_GROUP, TYPE_WORKLOAD } from '../const';
-import { K8sWorkloadResource, K8sResponseData } from '../types/types';
+import { CronJobModel } from '../models';
+import { K8sResponseData, K8sWorkloadResource } from '../types/types';
+import { getPipelinesDataForResource } from '../utils/pipeline-utils';
+import { getPodsDataForResource } from '../utils/pod-resource-utils';
 import {
   createOverviewItemForType,
+  getCheCluster,
   getIngressesDataForResourceServices,
-  getIngressURLForResource,
+  getJobsDataForResource,
+  getRoutesDataForResourceServices,
   getServicesForResource,
+  getUrlForResource,
 } from '../utils/resource-utils';
 import {
   createTopologyNodeData,
@@ -19,8 +27,6 @@ import {
   mergeGroup,
   WorkloadModelProps,
 } from '../utils/transform-utils';
-import { getPodsDataForResource } from '../utils/pod-resource-utils';
-import { V1Service } from '@kubernetes/client-node';
 
 export const getBaseTopologyDataModel = (resources: K8sResponseData): Model => {
   const baseDataModel: Model = {
@@ -42,8 +48,8 @@ export const getBaseTopologyDataModel = (resources: K8sResponseData): Model => {
             resource,
             item,
             TYPE_WORKLOAD,
-            'default image',
-            getIngressURLForResource(resources, resource),
+            '',
+            getUrlForResource(resources, resource),
             {
               podsData: getPodsDataForResource(resource, resources),
               services: getServicesForResource(
@@ -54,6 +60,14 @@ export const getBaseTopologyDataModel = (resources: K8sResponseData): Model => {
                 resources,
                 resource,
               ),
+              routesData: getRoutesDataForResourceServices(resources, resource),
+              ...(resource.kind === CronJobModel.kind
+                ? {
+                    jobsData: getJobsDataForResource(resources, resource),
+                  }
+                : {}),
+              pipelinesData: getPipelinesDataForResource(resources, resource),
+              cheCluster: getCheCluster(resources),
             },
           );
           typedDataModel.nodes?.push(
@@ -81,8 +95,8 @@ const updateAppGroupChildren = (model: Model) => {
   model.nodes?.forEach(n => {
     if (n.type === TYPE_APPLICATION_GROUP) {
       // Filter out any children removed by depicters
-      n.children = n.children?.filter(id =>
-        model.nodes?.find(child => child.id === id),
+      n.children = n.children?.filter(
+        id => model.nodes?.find(child => child.id === id),
       );
       n.data.groupResources =
         n.children?.map(id => model.nodes?.find(c => id === c.id)) ?? [];

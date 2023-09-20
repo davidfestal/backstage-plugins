@@ -1,14 +1,14 @@
 import React from 'react';
-import { useRepository, useTagDetails } from '../../hooks';
 import { useParams } from 'react-router-dom';
-import { QuayTagDetails } from '../QuayTagDetails';
+
 import { ErrorPanel, Progress } from '@backstage/core-components';
 import { useRouteRef } from '@backstage/core-plugin-api';
+
+import { useRepository, useTagDetails } from '../../hooks';
 import { rootRouteRef } from '../../routes';
+import { QuayTagDetails } from '../QuayTagDetails';
 
-type QuayTagPageProps = Record<never, string>;
-
-export const QuayTagPage: React.FC<QuayTagPageProps> = () => {
+export const QuayTagPage = () => {
   const rootLink = useRouteRef(rootRouteRef);
   const { repository, organization } = useRepository();
   const { digest } = useParams();
@@ -17,9 +17,13 @@ export const QuayTagPage: React.FC<QuayTagPageProps> = () => {
   }
   const { loading, value } = useTagDetails(organization, repository, digest);
   if (loading) {
-    return <Progress variant="query" />;
+    return (
+      <div data-testid="quay-tag-page-progress">
+        <Progress variant="query" />
+      </div>
+    );
   }
-  if (!value || !value.data) {
+  if (!value?.data) {
     return <ErrorPanel error={new Error('no digest')} />;
   }
 

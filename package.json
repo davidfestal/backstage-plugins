@@ -1,24 +1,29 @@
 {
   "name": "root",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "engines": {
-    "node": "16 || 18"
+    "node": "18"
   },
   "scripts": {
-    "dev": "concurrently \"yarn start\" \"yarn start-backend\"",
-    "start": "yarn workspace app start",
-    "start-backend": "yarn workspace backend start",
-    "build": "backstage-cli repo build",
-    "tsc": "tsc",
-    "clean": "backstage-cli repo clean",
-    "test": "backstage-cli repo test --passWithNoTests --coverage",
-    "lint": "backstage-cli repo lint",
-    "lint:fix": "backstage-cli repo lint --fix",
-    "prettier:check": "prettier --check .",
-    "prettier:fix": "prettier --write .",
+    "preinstall": "npx only-allow yarn",
+    "start": "turbo run start",
+    "start:backstage": "turbo run start --filter=...{./packages/*}",
+    "start:plugins": "turbo run start --filter=...{./plugins/*}",
+    "build": "turbo run build",
+    "build:backstage": "turbo run build --filter=...{./packages/*}",
+    "build:plugins": "turbo run build --filter=...{./plugins/*}",
+    "tsc": "turbo run tsc",
+    "clean": "turbo run clean",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "lint-staged": "lint-staged",
+    "prettier:check": "prettier --ignore-unknown --check .",
+    "prettier:fix": "prettier --ignore-unknown --write .",
     "new": "backstage-cli new --scope @janus-idp",
-    "release": "multi-semantic-release"
+    "release": "multi-semantic-release",
+    "prepare": "husky install",
+    "versions:bump": "backstage-cli versions:bump && find . -name 'package.json' ! -path '*/node_modules/*' -exec sed -i '' -e '/devDependencies/,/\\}/{ s/\"\\^/\"/; }' {} \\;"
   },
   "workspaces": {
     "packages": [
@@ -27,33 +32,31 @@
     ]
   },
   "devDependencies": {
-    "@backstage/cli": "0.22.1",
+    "@backstage/cli": "0.22.9",
+    "@ianvs/prettier-plugin-sort-imports": "4.1.0",
+    "@janus-idp/cli": "*",
     "@semantic-release/changelog": "6.0.3",
     "@semantic-release/exec": "6.0.3",
     "@semantic-release/git": "10.0.1",
-    "@semantic-release/github": "8.0.7",
-    "@spotify/prettier-config": "14.1.5",
-    "concurrently": "8.0.1",
-    "conventional-changelog-conventionalcommits": "5.0.0",
-    "lerna": "6.5.1",
-    "multi-semantic-release": "3.0.1",
-    "node-gyp": "9.3.1",
-    "prettier": "2.8.8",
-    "typescript": "5.0.2"
+    "@semantic-release/github": "9.0.4",
+    "@semrel-extra/npm": "1.2.2",
+    "@spotify/prettier-config": "15.0.0",
+    "conventional-changelog-conventionalcommits": "7.0.2",
+    "husky": "8.0.3",
+    "eslint-plugin-jest": "27.4.0",
+    "lint-staged": "14.0.1",
+    "multi-semantic-release": "3.0.2",
+    "prettier": "3.0.3",
+    "turbo": "1.10.0",
+    "typescript": "5.0.4"
   },
   "resolutions": {
-    "@types/react": "^17",
-    "@types/react-dom": "^17"
+    "@types/react": "^17.0.2",
+    "@types/react-dom": "^17.0.2"
   },
-  "prettier": "@spotify/prettier-config",
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,mjs,cjs}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "*.{json,md}": [
-      "prettier --write"
-    ]
+    "*": "yarn run prettier:fix",
+    "*.{js,jsx,ts,tsx,mjs,cjs}": "yarn run lint -- -- --fix"
   },
   "release": {
     "branches": "main",
@@ -61,17 +64,72 @@
       [
         "@semantic-release/commit-analyzer",
         {
-          "preset": "conventionalcommits"
+          "preset": "conventionalcommits",
+          "releaseRules": [
+            {
+              "type": "docs",
+              "release": "patch"
+            },
+            {
+              "type": "refactor",
+              "release": "patch"
+            },
+            {
+              "type": "perf",
+              "release": "minor"
+            },
+            {
+              "scope": "no-release",
+              "release": false
+            },
+            {
+              "type": "chore",
+              "scope": "deps",
+              "release": "patch"
+            }
+          ]
         }
       ],
       [
         "@semantic-release/release-notes-generator",
         {
-          "preset": "conventionalcommits"
+          "preset": "conventionalcommits",
+          "presetConfig": {
+            "types": [
+              {
+                "type": "feat",
+                "section": "Features"
+              },
+              {
+                "type": "fix",
+                "section": "Bug Fixes"
+              },
+              {
+                "type": "docs",
+                "section": "Documentation"
+              },
+              {
+                "type": "style",
+                "section": "Other changes"
+              },
+              {
+                "type": "refactor",
+                "section": "Other changes"
+              },
+              {
+                "type": "perf",
+                "section": "Other changes"
+              },
+              {
+                "type": "test",
+                "section": "Other changes"
+              }
+            ]
+          }
         }
       ],
       "@semantic-release/changelog",
-      "@semantic-release/npm",
+      "@semrel-extra/npm",
       "@semantic-release/git",
       [
         "@semantic-release/github",

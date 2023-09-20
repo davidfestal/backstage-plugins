@@ -1,18 +1,19 @@
 import {
+  V1ContainerStatus,
   V1Deployment,
   V1Pod,
-  V1ContainerStatus,
 } from '@kubernetes/client-node';
+
 import {
   AllPodStatus,
   DeploymentPhase,
   DeploymentStrategy,
   podColor,
 } from '../components/Pods/pod';
-import { resourceGVKs } from '../models';
+import { resourceModels } from '../models';
 import { PodControllerOverviewItem, PodRCData } from '../types/pods';
 import { ResKindAbbrColor } from '../types/topology-types';
-import { GroupVersionKind, K8sWorkloadResource } from '../types/types';
+import { K8sWorkloadResource, Model } from '../types/types';
 
 export const podStatus = Object.keys(podColor);
 
@@ -92,7 +93,7 @@ export const getPodStatus = (pod: V1Pod): AllPodStatus => {
     return AllPodStatus.Terminating;
   }
   const warnings = podWarnings(pod);
-  if (warnings !== null && warnings.length) {
+  if (warnings?.length) {
     if (warnings.includes(AllPodStatus.CrashLoopBackOff)) {
       return AllPodStatus.CrashLoopBackOff;
     }
@@ -131,7 +132,7 @@ export const calculateRadius = (size: number) => {
 
 const getScalingUp = (dc: K8sWorkloadResource) => {
   return {
-    ...(dc.metadata && dc.metadata),
+    ...(dc.metadata || {}),
     status: {
       phase: AllPodStatus.ScalingUp,
     },
@@ -160,9 +161,9 @@ export const getPodData = (
 } => {
   const strategy =
     (podRCData.obj as V1Deployment)?.spec?.strategy?.type || null;
-  const currentDeploymentphase = podRCData.current && podRCData.current.phase;
-  const currentPods = podRCData.current && podRCData.current.pods;
-  const previousPods = podRCData.previous && podRCData.previous.pods;
+  const currentDeploymentphase = podRCData.current?.phase;
+  const currentPods = podRCData.current?.pods || [];
+  const previousPods = podRCData.previous?.pods || [];
   // DaemonSets and StatefulSets
   if (!strategy)
     return {
@@ -186,8 +187,8 @@ export const getPodData = (
     podRCData.isRollingOut
   ) {
     return {
-      inProgressDeploymentData: currentPods as V1Pod[],
-      completedDeploymentData: previousPods as V1Pod[],
+      inProgressDeploymentData: currentPods,
+      completedDeploymentData: previousPods,
     };
   }
   // if build is not finished show `Scaling Up` on pod phase
@@ -206,16 +207,15 @@ export const getPodData = (
 const kindToAbbr = (kind: string): string =>
   (kind.replace(/[^A-Z]/g, '') || kind.toUpperCase()).slice(0, 4);
 
-const getAssociatedModel = (kind: string): GroupVersionKind | undefined => {
-  const resourcesModelsList = Object.values(resourceGVKs);
+const getAssociatedModel = (kind: string): Model | undefined => {
+  const resourcesModelsList = Object.values(resourceModels);
   return resourcesModelsList.find(resModel => resModel.kind === kind);
 };
 
-export const getKindStringAndAbbreviation = (
-  kind: string,
-): ResKindAbbrColor => {
+export const getKindAbbrColor = (kind: string): ResKindAbbrColor => {
   const kindObj = getAssociatedModel(kind);
   const kindStr = kindObj?.kind ?? kind;
-  const kindAbbr = kindToAbbr(kindStr);
-  return { kindStr, kindAbbr };
+  const kindAbbr = kindObj?.abbr ?? kindToAbbr(kindStr);
+  const kindColor = kindObj?.color;
+  return { kindStr, kindAbbr, kindColor };
 };

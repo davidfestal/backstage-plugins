@@ -1,18 +1,20 @@
-import * as React from 'react';
+import React from 'react';
+
+import { V1DaemonSet, V1Deployment, V1Pod } from '@kubernetes/client-node';
 import { ChartLabel } from '@patternfly/react-charts';
 import classNames from 'classnames';
-import { V1DaemonSet, V1Deployment, V1Pod } from '@kubernetes/client-node';
-import { getPodStatus } from './workload-node-utils';
+
 import { AllPodStatus } from '../components/Pods/pod';
-import { K8sWorkloadResource } from '../types/types';
 import { CronJobGVK, DaemonSetGVK, JobGVK, PodGVK } from '../models';
+import { K8sWorkloadResource } from '../types/types';
+import { getPodStatus } from './workload-node-utils';
 
 const getTitleComponent = (
   longTitle: boolean = false,
   longSubtitle: boolean = false,
   reversed: boolean = false,
 ) => {
-  const labelClasses = classNames('pf-chart-donut-title', {
+  const labelClasses = classNames('pf-v5-chart-donut-title', {
     'pod-ring__center-text--reversed': reversed,
     'pod-ring__center-text': !reversed,
     'pod-ring__long-text': longTitle,

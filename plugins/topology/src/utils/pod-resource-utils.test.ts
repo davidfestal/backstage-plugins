@@ -1,16 +1,19 @@
 import {
-  V1Deployment,
-  V1StatefulSet,
-  V1DaemonSet,
   V1CronJob,
+  V1DaemonSet,
+  V1Deployment,
+  V1Pod,
+  V1StatefulSet,
 } from '@kubernetes/client-node';
+
 import { mockKubernetesResponse } from '../__fixtures__/1-deployments';
 import {
-  getPodsForStatefulSet,
-  getPodsForDaemonSet,
-  getPodsForCronJob,
   getDeploymentRevision,
+  getPodsForCronJob,
+  getPodsForDaemonSet,
   getPodsForDeployment,
+  getPodsForStatefulSet,
+  podPhase,
 } from './pod-resource-utils';
 
 describe('PodResourceUtils', () => {
@@ -38,14 +41,14 @@ describe('PodResourceUtils', () => {
     expect(getDeploymentRevision(deployment)).toBe(1);
   });
 
-  it('should return null if annotations are not present', () => {
+  it('should return undefined if annotations are not present', () => {
     const deployment = {
       metadata: {
         annotations: {},
       },
     };
-    expect(getDeploymentRevision(deployment)).toBe(null);
-    expect(getDeploymentRevision({})).toBe(null);
+    expect(getDeploymentRevision(deployment)).toBe(undefined);
+    expect(getDeploymentRevision({})).toBe(undefined);
   });
 
   it('should return pods for a given Deployment', () => {
@@ -133,5 +136,68 @@ describe('PodResourceUtils', () => {
       mockResources,
     );
     expect(podRCData.pods).toHaveLength(0);
+  });
+});
+
+describe('podPhase', () => {
+  let pod: V1Pod;
+
+  beforeEach(() => {
+    pod = {
+      metadata: {},
+      status: {},
+    };
+  });
+
+  it('should return empty string for invalid pod', () => {
+    const invalidPods: any[] = [null, undefined, {}];
+    invalidPods.forEach(p => {
+      const phase = podPhase(p);
+
+      expect(phase).toEqual('');
+    });
+  });
+
+  it('should return `Terminating` if given pod has deletion timestamp', () => {
+    pod = { metadata: { deletionTimestamp: new Date('2017-08-14T03:51:45Z') } };
+    const phase = podPhase(pod);
+
+    expect(phase).toEqual('Terminating');
+  });
+
+  it('should return `Unknown` if given pod has reason `NodeLost`', () => {
+    pod = { status: { reason: 'NodeLost' } };
+    const phase = podPhase(pod);
+
+    expect(phase).toEqual('Unknown');
+  });
+
+  it('should return the pod status phase', () => {
+    pod = { status: { phase: 'Pending' } };
+    const phase = podPhase(pod);
+
+    expect(phase).toEqual(pod?.status?.phase);
+  });
+
+  it('should return the pod status reason if defined', () => {
+    pod = { status: { reason: 'Unschedulable' } };
+    const phase = podPhase(pod);
+
+    expect(phase).toEqual(pod?.status?.reason);
+  });
+
+  it('should return the state reason of the first waiting or terminated container in the pod', () => {
+    pod = {
+      status: {
+        containerStatuses: [
+          { state: { running: {} } },
+          { state: { waiting: { reason: 'Unschedulable' } } },
+          { state: { terminated: { reason: 'Initialized' } } },
+          { state: { waiting: { reason: 'Ready' } } },
+        ],
+      },
+    } as V1Pod;
+    const phase = podPhase(pod);
+    expect(phase).toEqual('Unschedulable');
   });
 });

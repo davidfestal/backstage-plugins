@@ -1,14 +1,17 @@
-import * as React from 'react';
+import React from 'react';
+
 import { WarningPanel } from '@backstage/core-components';
 import { useEntity } from '@backstage/plugin-catalog-react';
+
 import { Typography } from '@material-ui/core';
+
 import { ClusterError, ClusterErrors } from '../../types/types';
 
 import './TopologyErrorPanel.css';
 
-const TopologyErrorPanel: React.FC<{ allErrors: ClusterErrors }> = ({
-  allErrors,
-}) => {
+type TopologyErrorPanelProps = { allErrors: ClusterErrors };
+
+const TopologyErrorPanel = ({ allErrors }: TopologyErrorPanelProps) => {
   const {
     entity: {
       metadata: { name: entityName },

@@ -14,50 +14,59 @@
  * limitations under the License.
  */
 
-import { errorHandler } from '@backstage/backend-common';
+import { errorHandler, loggerToWinstonLogger } from '@backstage/backend-common';
+import {
+  coreServices,
+  createBackendPlugin,
+} from '@backstage/backend-plugin-api';
 import { Config } from '@backstage/config';
+
 import express from 'express';
 import Router from 'express-promise-router';
 import { Logger } from 'winston';
+
+import {
+  Cluster,
+  ClusterOverview,
+} from '@janus-idp/backstage-plugin-ocm-common';
+
+import { readOcmConfigs } from '../helpers/config';
 import {
   getManagedCluster,
-  listManagedClusters,
   getManagedClusterInfo,
   hubApiClient,
+  listManagedClusterInfos,
+  listManagedClusters,
 } from '../helpers/kubernetes';
 import {
+  getClaim,
   parseClusterStatus,
   parseManagedCluster,
+  parseNodeStatus,
   parseUpdateInfo,
   translateOCMToResource,
   translateResourceToOCM,
 } from '../helpers/parser';
-import { readOcmConfigs } from '../helpers/config';
-import { Cluster } from '@janus-idp/backstage-plugin-ocm-common';
+import { ManagedClusterInfo } from '../types';
 
 export interface RouterOptions {
   logger: Logger;
   config: Config;
 }
 
-export async function createRouter(
-  options: RouterOptions,
-): Promise<express.Router> {
-  const { logger } = options;
-  const { config } = options;
+const buildRouter = (config: Config, logger: Logger) => {
+  const router = Router();
+  router.use(express.json());
 
   const clients = Object.fromEntries(
     readOcmConfigs(config).map(provider => [
       provider.id,
       {
-        client: hubApiClient(provider, options.logger),
+        client: hubApiClient(provider, logger),
         hubResourceName: provider.hubResourceName,
       },
     ]),
   );
-
-  const router = Router();
-  router.use(express.json());
 
   router.get(
     '/status/:providerId/:clusterName',
@@ -101,11 +110,25 @@ export async function createRouter(
     const allClusters = await Promise.all(
       Object.values(clients).map(async c => {
         const mcs = await listManagedClusters(c.client);
+        const mcis = await listManagedClusterInfos(c.client);
 
-        return mcs.items.map(mc => ({
-          name: translateOCMToResource(mc.metadata!.name!, c.hubResourceName),
-          status: parseClusterStatus(mc),
-        }));
+        return mcs.items.map(mc => {
+          const mci =
+            mcis.items.find(
+              info => info.metadata?.name === mc.metadata!.name,
+            ) || ({} as ManagedClusterInfo);
+
+          return {
+            name: translateOCMToResource(mc.metadata!.name!, c.hubResourceName),
+            status: parseClusterStatus(mc),
+            platform: getClaim(mc, 'platform.open-cluster-management.io'),
+            openshiftVersion:
+              mc.metadata!.labels?.openshiftVersion ||
+              getClaim(mc, 'version.openshift.io'),
+            nodes: parseNodeStatus(mci),
+            ...parseUpdateInfo(mci),
+          } as ClusterOverview;
+        });
       }),
     );
 
@@ -113,6 +136,30 @@ export async function createRouter(
   });
 
   router.use(errorHandler({ logClientErrors: true }));
-
   return router;
+};
+
+export async function createRouter(
+  options: RouterOptions,
+): Promise<express.Router> {
+  const { logger } = options;
+  const { config } = options;
+
+  return buildRouter(config, logger);
 }
+
+export const ocmPlugin = createBackendPlugin({
+  pluginId: 'ocm',
+  register(env) {
+    env.registerInit({
+      deps: {
+        logger: coreServices.logger,
+        config: coreServices.config,
+        http: coreServices.httpRouter,
+      },
+      async init({ config, logger, http }) {
+        http.use(buildRouter(config, loggerToWinstonLogger(logger)));
+      },
+    });
+  },
+});

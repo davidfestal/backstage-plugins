@@ -1,6 +1,6 @@
-import * as React from 'react';
+import React from 'react';
+
 import {
-  getDefaultShapeDecoratorCenter,
   GraphElement,
   isNode,
   Node,
@@ -13,10 +13,18 @@ import {
   WithDragNodeProps,
   WithSelectionProps,
 } from '@patternfly/react-topology';
-import BaseNode from './BaseNode';
-import PodSet, { podSetInnerRadius } from '../Pods/PodSet';
-import { AllPodStatus } from '../Pods/pod';
+
+import { SHOW_POD_COUNT_FILTER_ID } from '../../const';
+import { FilterContext } from '../../hooks/FilterContext';
+import { PipelinesData } from '../../types/pipeline';
+import { TopologyDecorator } from '../../types/topology-types';
 import { calculateRadius, getPodStatus } from '../../utils/workload-node-utils';
+import { AllPodStatus } from '../Pods/pod';
+import PodSet, { podSetInnerRadius } from '../Pods/PodSet';
+import BaseNode from './BaseNode';
+import EditDecorator from './decorators/EditDecorator';
+import { getNodeDecorators } from './decorators/getNodeDecorators';
+import { PipelineRunDecorator } from './decorators/PipelineRunDecorator';
 import { UrlDecorator } from './decorators/UrlDecorator';
 
 import './WorkloadNode.css';
@@ -57,15 +65,16 @@ type InnerWorkloadNodeProps = {
   element: Node;
 } & Partial<WithSelectionProps & WithDragNodeProps>;
 
-const InnerWorkloadNode: React.FC<InnerWorkloadNodeProps> = observer(
-  ({ element, onSelect, ...rest }) => {
+const InnerWorkloadNode = observer(
+  ({ element, onSelect, ...rest }: InnerWorkloadNodeProps) => {
     const data = element.getData();
     const { width, height } = element.getDimensions();
     const workloadData = data.data;
     const donutStatus = workloadData.podsData;
     const [hover, hoverRef] = useHover();
+    const { filters } = React.useContext(FilterContext);
     const size = Math.min(width, height);
-    const { decoratorRadius } = calculateRadius(size);
+    const { radius, decoratorRadius } = calculateRadius(size);
     const cx = width / 2;
     const cy = height / 2;
     const controller = useVisualizationController();
@@ -78,29 +87,103 @@ const InnerWorkloadNode: React.FC<InnerWorkloadNodeProps> = observer(
       if (onSelect) onSelect(e);
     };
 
-    const urlDecorator = React.useMemo(() => {
-      if (!workloadData?.url) {
+    const urlDecorator = (
+      nodeElement: Node,
+      urlDecoratorRadius: number,
+      x: number,
+      y: number,
+    ) => {
+      const url = nodeElement.getData().data?.url;
+
+      if (!url) {
         return null;
       }
-      const { x, y } = getDefaultShapeDecoratorCenter(
-        TopologyQuadrant.upperRight,
-        element,
-      );
-      const offset = decoratorRadius * 0.4;
+
       return (
         <UrlDecorator
+          key={`url-${nodeElement.getId()}`}
           url={workloadData.url}
-          radius={decoratorRadius}
-          x={x + offset}
-          y={y - offset}
+          radius={urlDecoratorRadius}
+          x={x}
+          y={y}
         />
       );
-    }, [workloadData?.url, element, decoratorRadius]);
+    };
+
+    const editDecorator = (
+      nodeElement: Node,
+      editDecoratorRadius: number,
+      x: number,
+      y: number,
+    ) => {
+      const { editURL, vcsURI } = nodeElement.getData().data;
+      if (!editURL && !vcsURI) {
+        return null;
+      }
+      return (
+        <EditDecorator
+          key={`edit-${nodeElement.getId()}`}
+          element={nodeElement}
+          radius={editDecoratorRadius}
+          x={x}
+          y={y}
+        />
+      );
+    };
+
+    const pipelineRunStatusDecorator = (
+      nodeElement: Node,
+      pipelineDecoratorRadius: number,
+      x: number,
+      y: number,
+    ) => {
+      const pipelinesData: PipelinesData =
+        nodeElement.getData().data?.pipelinesData;
+      if (
+        !pipelinesData?.pipelineRuns ||
+        pipelinesData.pipelineRuns.length === 0
+      ) {
+        return null;
+      }
+      return (
+        <PipelineRunDecorator
+          key={`plr-${nodeElement.getId()}`}
+          pipelinesData={pipelinesData}
+          radius={pipelineDecoratorRadius}
+          x={x}
+          y={y}
+        />
+      );
+    };
+
+    const decorators: TopologyDecorator[] = [
+      {
+        quadrant: TopologyQuadrant.lowerLeft,
+        decorator: pipelineRunStatusDecorator,
+      },
+      {
+        quadrant: TopologyQuadrant.upperRight,
+        decorator: urlDecorator,
+      },
+      {
+        quadrant: TopologyQuadrant.lowerRight,
+        decorator: editDecorator,
+      },
+    ];
+
+    const nodeDecorators = showDetails
+      ? getNodeDecorators(element, decorators, cx, cy, radius, decoratorRadius)
+      : null;
+
+    const iconImageUrl = workloadData.builderImage;
+
+    const showPodCount = filters?.find(f => f.id === SHOW_POD_COUNT_FILTER_ID)
+      ?.value;
 
     return (
-      <g className="tp-workload-node">
+      <g className="bs-topology-workload-node">
         <BaseNode
-          className="tp-workload-node"
+          className="bs-topology-workload-node"
           hoverRef={hoverRef as (node: Element) => () => void}
           innerRadius={podSetInnerRadius(size, donutStatus)}
           kind={workloadData?.kind}
@@ -108,12 +191,19 @@ const InnerWorkloadNode: React.FC<InnerWorkloadNodeProps> = observer(
           nodeStatus={
             !showDetails ? getAggregateStatus(donutStatus) : undefined
           }
-          attachments={showDetails && urlDecorator}
+          icon={!showPodCount && iconImageUrl}
+          attachments={nodeDecorators}
           onSelect={onNodeSelect}
           {...rest}
         >
           {donutStatus && showDetails ? (
-            <PodSet size={size} x={cx} y={cy} data={donutStatus} showPodCount />
+            <PodSet
+              size={size}
+              x={cx}
+              y={cy}
+              data={donutStatus}
+              showPodCount={showPodCount}
+            />
           ) : null}
         </BaseNode>
       </g>
@@ -125,7 +215,7 @@ type WorkloadNodeProps = {
   element?: GraphElement;
 } & Partial<WithSelectionProps & WithDragNodeProps>;
 
-const WorkloadNode: React.FC<WorkloadNodeProps> = ({ element, ...rest }) =>
+const WorkloadNode = ({ element, ...rest }: WorkloadNodeProps) =>
   !element || !isNode(element) ? null : (
     <InnerWorkloadNode element={element} {...rest} />
   );

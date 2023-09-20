@@ -1,19 +1,26 @@
 import {
+  V1CronJob,
+  V1DaemonSet,
   V1Deployment,
   V1IngressRule,
+  V1Job,
   V1Pod,
   V1ReplicaSet,
   V1Service,
   V1StatefulSet,
-  V1DaemonSet,
-  V1Job,
-  V1CronJob,
 } from '@kubernetes/client-node';
 
 export type GroupVersionKind = {
   kind: string;
   apiVersion: string;
   apiGroup?: string;
+};
+
+export type Model = GroupVersionKind & {
+  abbr: string;
+  labelPlural: string;
+  color?: string;
+  plural?: string;
 };
 
 export type K8sWorkloadResource =
@@ -51,4 +58,25 @@ export type K8sResourcesContextData = {
   selectedClusterErrors?: ClusterErrors;
   clusters: string[];
   setSelectedCluster: React.Dispatch<React.SetStateAction<number>>;
+  selectedCluster?: number;
+};
+
+export type TektonResponseData = {
+  [key: string]: { data: any[] };
+};
+
+export type TopologyDisplayOption = {
+  id: string;
+  label: string;
+  value: boolean;
+};
+
+export type DisplayFilters = TopologyDisplayOption[];
+export type SetAppliedTopologyFilters = (
+  filters: TopologyDisplayOption[],
+) => void;
+
+export type FilterContextType = {
+  filters?: DisplayFilters;
+  setAppliedTopologyFilters?: SetAppliedTopologyFilters;
 };

@@ -1,3 +1,58 @@
+export const customResourceRoute = {
+  metadata: {
+    name: 'hello-minikube2',
+    namespace: 'jai-test',
+    uid: '17c0f520-3878-4834-96a1-b19854f0d06f',
+    resourceVersion: '174049',
+    creationTimestamp: '2023-05-22T08:14:25Z',
+    labels: {
+      app: 'hello-minikube2',
+      'app.kubernetes.io/component': 'hello-minikube2',
+      'app.kubernetes.io/instance': 'hello-minikube2',
+      'app.kubernetes.io/name': 'hello-minikube2',
+      'app.openshift.io/runtime': 'nodejs',
+      'app.openshift.io/runtime-version': '16-ubi8',
+      'backstage.io/kubernetes-id': 'backstage',
+    },
+    annotations: {
+      'openshift.io/host.generated': 'true',
+    },
+  },
+  spec: {
+    host: 'nodejs-ex-git-jai-test.apps.viraj-22-05-2023-0.devcluster.openshift.com',
+    to: {
+      kind: 'Service',
+      name: 'hello-world',
+      weight: 100,
+    },
+    port: {
+      targetPort: '8080-tcp',
+    },
+    tls: {
+      termination: 'edge',
+      insecureEdgeTerminationPolicy: 'Redirect',
+    },
+    wildcardPolicy: 'None',
+  },
+  status: {
+    ingress: [
+      {
+        host: 'nodejs-ex-git-jai-test.apps.viraj-22-05-2023-0.devcluster.openshift.com',
+        routerName: 'default',
+        conditions: [
+          {
+            type: 'Admitted',
+            status: 'True',
+            lastTransitionTime: '2023-05-22T08:14:25Z',
+          },
+        ],
+        wildcardPolicy: 'None',
+        routerCanonicalHostname:
+          'router-default.apps.viraj-22-05-2023-0.devcluster.openshift.com',
+      },
+    ],
+  },
+};
 export const mockKubernetesResponse = {
   pods: [
     {
@@ -68,7 +123,7 @@ export const mockKubernetesResponse = {
         ],
         containers: [
           {
-            name: 'container',
+            name: 'container-hello',
             image: 'openshift/hello-openshift',
             ports: [
               {
@@ -145,7 +200,7 @@ export const mockKubernetesResponse = {
         startTime: '2023-02-15T09:00:37Z',
         containerStatuses: [
           {
-            name: 'container',
+            name: 'container-hello',
             state: {
               running: {
                 startedAt: '2023-02-15T09:00:43Z',
@@ -153,7 +208,7 @@ export const mockKubernetesResponse = {
             },
             lastState: {},
             ready: true,
-            restartCount: 0,
+            restartCount: 1,
             image: 'openshift/hello-openshift:latest',
             imageID:
               'docker-pullable://openshift/hello-openshift@sha256:aaea76ff622d2f8bcb32e538e7b3cd0ef6d291953f3e7c9f556c1ba5baf47e2e',
@@ -1599,6 +1654,7 @@ export const mockKubernetesResponse = {
         generation: 1,
         labels: {
           'backstage.io/kubernetes-id': 'backstage',
+          'app.kubernetes.io/instance': 'test-deployment',
         },
         annotations: {
           'deployment.kubernetes.io/revision': '1',
@@ -1688,6 +1744,7 @@ export const mockKubernetesResponse = {
         ownerReferences: [{ name: 'app', uid: 1 }],
         labels: {
           'backstage.io/kubernetes-id': 'backstage',
+          'app.kubernetes.io/instance': 'hello-world',
         },
         annotations: {
           'deployment.kubernetes.io/revision': '1',
@@ -1777,6 +1834,7 @@ export const mockKubernetesResponse = {
         creationTimestamp: new Date('2023-02-15T09:00:36Z'),
         labels: {
           'backstage.io/kubernetes-id': 'backstage',
+          'app.kubernetes.io/instance': 'hello-world-45',
         },
         annotations: {
           'deployment.kubernetes.io/revision': '1',
@@ -1985,6 +2043,12 @@ export const mockKubernetesResponse = {
       },
     },
   ],
+  routes: [
+    {
+      ...customResourceRoute,
+      kind: 'Route',
+    },
+  ],
   statefulsets: [
     {
       apiVersion: 'apps/v1',
@@ -2190,7 +2254,6 @@ export const mockKubernetesResponse = {
       status: {},
     },
   ],
-
   daemonSets: [
     {
       metadata: {
@@ -2260,6 +2323,170 @@ export const mockKubernetesResponse = {
       apiVersion: 'apps/v1',
     },
   ],
+  checlusters: [
+    {
+      apiVersion: 'org.eclipse.che/v2',
+      kind: 'CheCluster',
+      metadata: {
+        annotations: {
+          'che.eclipse.org/checluster-defaults-cleanup':
+            '{"containers.resources":"true","spec.components.dashboard.headerMessage":"true","spec.components.pluginRegistry.openVSXURL":"true","spec.devEnvironments.defaultComponents":"true","spec.devEnvironments.defaultEditor":"true","spec.devEnvironments.disableContainerBuildCapabilities":"true"}',
+        },
+        resourceVersion: '305114',
+        name: 'devspaces',
+        uid: '53a9bc1e-6383-4800-90a5-6af8aabbf592',
+        creationTimestamp: '2023-07-18T11:25:10Z',
+        generation: 1,
+        namespace: 'openshift-devspaces',
+        labels: {
+          'backstage.io/kubernetes-id': 'nationalparks-py',
+        },
+      },
+      spec: {
+        components: {
+          cheServer: {
+            debug: false,
+            logLevel: 'INFO',
+          },
+          dashboard: {},
+          database: {
+            externalDb: false,
+          },
+          devWorkspace: {},
+          devfileRegistry: {},
+          imagePuller: {
+            enable: false,
+            spec: {},
+          },
+          metrics: {
+            enable: true,
+          },
+          pluginRegistry: {},
+        },
+        containerRegistry: {},
+        devEnvironments: {
+          containerBuildConfiguration: {
+            openShiftSecurityContextConstraint: 'container-build',
+          },
+          defaultNamespace: {
+            autoProvision: true,
+            template: '<username>-devspaces',
+          },
+          maxNumberOfWorkspacesPerUser: -1,
+          secondsOfInactivityBeforeIdling: 1800,
+          secondsOfRunBeforeIdling: -1,
+          startTimeoutSeconds: 300,
+          storage: {
+            pvcStrategy: 'per-user',
+          },
+        },
+        gitServices: {},
+        networking: {
+          auth: {
+            gateway: {
+              configLabels: {
+                app: 'che',
+                component: 'che-gateway-config',
+              },
+            },
+          },
+        },
+      },
+      status: {
+        chePhase: 'Active',
+        cheURL:
+          'https://devspaces.apps.rhoms-4.14-071804.dev.openshiftappsvc.org',
+        cheVersion: '3.7.0',
+        devfileRegistryURL:
+          'https://devspaces.apps.rhoms-4.14-071804.dev.openshiftappsvc.org/devfile-registry',
+        gatewayPhase: 'Established',
+        pluginRegistryURL:
+          'https://devspaces.apps.rhoms-4.14-071804.dev.openshiftappsvc.org/plugin-registry/v3',
+        workspaceBaseDomain: 'apps.rhoms-4.14-071804.dev.openshiftappsvc.org',
+      },
+    },
+    {
+      apiVersion: 'org.eclipse.che/v2',
+      kind: 'CheCluster',
+      metadata: {
+        annotations: {
+          'che.eclipse.org/checluster-defaults-cleanup':
+            '{"containers.resources":"true","spec.components.dashboard.headerMessage":"true","spec.components.pluginRegistry.openVSXURL":"true","spec.devEnvironments.defaultComponents":"true","spec.devEnvironments.defaultEditor":"true","spec.devEnvironments.disableContainerBuildCapabilities":"true"}',
+        },
+        resourceVersion: '305114',
+        name: 'devspaces2',
+        uid: '53a9bc1e-6383-4800-90a5-6af8aabbf592',
+        creationTimestamp: '2023-07-18T11:25:10Z',
+        generation: 1,
+        namespace: 'default',
+        labels: {
+          'backstage.io/kubernetes-id': 'nationalparks-py',
+        },
+      },
+      spec: {
+        components: {
+          cheServer: {
+            debug: false,
+            logLevel: 'INFO',
+          },
+          dashboard: {},
+          database: {
+            externalDb: false,
+          },
+          devWorkspace: {},
+          devfileRegistry: {},
+          imagePuller: {
+            enable: false,
+            spec: {},
+          },
+          metrics: {
+            enable: true,
+          },
+          pluginRegistry: {},
+        },
+        containerRegistry: {},
+        devEnvironments: {
+          containerBuildConfiguration: {
+            openShiftSecurityContextConstraint: 'container-build',
+          },
+          defaultNamespace: {
+            autoProvision: true,
+            template: '<username>-devspaces',
+          },
+          maxNumberOfWorkspacesPerUser: -1,
+          secondsOfInactivityBeforeIdling: 1800,
+          secondsOfRunBeforeIdling: -1,
+          startTimeoutSeconds: 300,
+          storage: {
+            pvcStrategy: 'per-user',
+          },
+        },
+        gitServices: {},
+        networking: {
+          auth: {
+            gateway: {
+              configLabels: {
+                app: 'che',
+                component: 'che-gateway-config',
+              },
+            },
+          },
+        },
+      },
+      status: {
+        chePhase: 'Active',
+        cheURL:
+          'https://devspaces.apps.rhoms-4.14-071804.dev.openshiftappsvc.org',
+        cheVersion: '3.7.0',
+        devfileRegistryURL:
+          'https://devspaces.apps.rhoms-4.14-071804.dev.openshiftappsvc.org/devfile-registry',
+        gatewayPhase: 'Established',
+        pluginRegistryURL:
+          'https://devspaces.apps.rhoms-4.14-071804.dev.openshiftappsvc.org/plugin-registry/v3',
+        workspaceBaseDomain: 'apps.rhoms-4.14-071804.dev.openshiftappsvc.org',
+      },
+    },
+  ],
 };
 
 export const mockK8sResourcesData = {
@@ -2280,6 +2507,9 @@ export const mockK8sResourcesData = {
     },
     ingresses: {
       data: mockKubernetesResponse.ingresses,
+    },
+    routes: {
+      data: mockKubernetesResponse.routes,
     },
   },
 };

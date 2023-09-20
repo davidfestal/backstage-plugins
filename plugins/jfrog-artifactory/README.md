@@ -1,40 +1,46 @@
 # Jfrog Artifactory plugin for Backstage
 
-This plugin will show you information about your container images within Jfrog Artifactory registry
+The Jfrog Artifactory plugin displays information about your container images within the Jfrog Artifactory registry.
 
-## Getting started
+## For administrators
 
-1. Install the plugin
+### Installation and configuration
 
-   ```bash
+#### Procedure
+
+1. Run the following command to install the Jfrog Artifactory plugin:
+
+   ```console
    yarn workspace app add @janus-idp/backstage-plugin-jfrog-artifactory
    ```
 
-2. Set the proxy to desired Artifactory server
+1. Set the proxy to the desired Artifactory server in the `app-config.yaml` file as follows:
 
-   ```yaml
-   # app-config.yaml
+   ```yaml title="app-config.yaml"
    proxy:
      '/jfrog-artifactory/api':
-       target: 'http://<hostname>:8082'
+       target: 'http://<hostname>:8082' # or https://<customer>.jfrog.io
        headers:
          # Authorization: 'Bearer <YOUR TOKEN>'
        # Change to "false" in case of using self hosted artifactory instance with a self-signed certificate
        secure: true
    ```
 
-3. Enable additional tab on the entity view page
+1. Enable the **JFROG ARTIFACTORY** tab on the entity view page in `packages/app/src/components/catalog/EntityPage.tsx`:
 
-   ```ts
-   // packages/app/src/components/catalog/EntityPage.tsx
+   ```ts title="packages/app/src/components/catalog/EntityPage.tsx"
+   /* highlight-add-start */
    import {
-     JfrogArtifactoryPage,
      isJfrogArtifactoryAvailable,
+     JfrogArtifactoryPage,
    } from '@janus-idp/backstage-plugin-jfrog-artifactory';
+
+   /* highlight-add-end */
 
    const serviceEntityPage = (
      <EntityPageLayout>
        // ...
+       {/* highlight-add-start */}
        <EntityLayout.Route
          if={isJfrogArtifactoryAvailable}
          path="/jfrog-artifactory"
@@ -42,26 +48,36 @@ This plugin will show you information about your container images within Jfrog A
        >
          <JfrogArtifactoryPage />
        </EntityLayout.Route>
+       {/* highlight-add-end */}
      </EntityPageLayout>
    );
    ```
 
-4. Annotate your entity with
+1. Annotate your entity with the following annotations:
 
-   ```yaml
+   ```yaml title="catalog-info.yaml"
    metadata:
      annotations:
-       'jfrog-artifactory/image-name': `<IMAGE-NAME>',
+       'jfrog-artifactory/image-name': '<IMAGE-NAME>'
    ```
 
-## Development
+## For users
 
-In [Backstage plugin terminology](https://backstage.io/docs/local-dev/cli-build-system#package-roles), this is a `frontend-plugin`. However it requires backend proxy to be available at all times. Development environment therefore requires you to run a backend instance as well. You can start a live dev session from the repository root using following commands concurrently:
+### Using the Jfrog Artifactory plugin in Backstage
 
-```
-yarn start-backend
-```
+Jfrog Artifactory is a front-end plugin that enables you to view the information about the container images that are available in your Jfrog Artifactory registry.
 
-```
-yarn workspace @janus-idp/backstage-plugin-jfrog-artifactory run start
-```
+#### Prerequisites
+
+- Your Backstage application is installed and running.
+- You have installed the Jfrog Artifactory plugin. For installation and configuration steps, see [Installation and configuration](#installation-and-configuration).
+
+#### Procedure
+
+1. Open your Backstage application and select a component from the **Catalog** page.
+
+1. Go to the **JFROG ARTIFACTORY** tab.
+
+   ![jfrog-tab](./images/jfrog-plugin-user1.png)
+
+   The **JFROG ARTIFACTORY** tab contains a list of container images and related information, such as **VERSION**, **REPOSITORIES**, **MANIFEST**, **MODIFIED**, and **SIZE**.

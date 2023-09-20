@@ -9,15 +9,32 @@ import {
   V1Service,
   V1StatefulSet,
 } from '@kubernetes/client-node';
+
+import { IngressesData } from '../types/ingresses';
+import { JobsData } from '../types/jobs';
+import { RouteIngress, RouteKind, RoutesData } from '../types/route';
 import { OverviewItem } from '../types/topology-types';
 import {
   IngressRule,
   K8sResponseData,
   K8sWorkloadResource,
 } from '../types/types';
-import { WORKLOAD_TYPES } from './topology-utils';
 import { LabelSelector } from './label-selector';
-import { IngressesData } from '../types/ingresses';
+import {
+  getJobsForCronJob,
+  getPodsDataForResource,
+} from './pod-resource-utils';
+import { WORKLOAD_TYPES } from './topology-utils';
+
+export const byCreationTime = (left: any, right: any): number => {
+  const leftCreationTime = new Date(
+    left?.metadata?.creationTimestamp || Date.now(),
+  );
+  const rightCreationTime = new Date(
+    right?.metadata?.creationTimestamp || Date.now(),
+  );
+  return rightCreationTime.getTime() - leftCreationTime.getTime();
+};
 
 const validPod = (pod: V1Pod) => {
   const owners = pod?.metadata?.ownerReferences;
@@ -43,18 +60,18 @@ export const createOverviewItemForType = (
     case 'jobs':
       return isStandaloneJob(resource)
         ? {
-            obj: resource as K8sWorkloadResource,
+            obj: resource,
           }
         : undefined;
     case 'pods':
       return validPod(resource as V1Pod)
         ? {
-            obj: resource as K8sWorkloadResource,
+            obj: resource,
           }
         : undefined;
     default:
       return {
-        obj: resource as K8sWorkloadResource,
+        obj: resource,
       };
   }
 };
@@ -172,3 +189,117 @@ export const getIngressURLForResource = (
 
   return getIngressesURL(ingressesData);
 };
+
+export const getJobsDataForResource = (
+  resources: K8sResponseData,
+  resource: K8sWorkloadResource,
+): JobsData => {
+  if (!resources.jobs?.data?.length) {
+    return [];
+  }
+
+  const resourceJobs = getJobsForCronJob(
+    resource.metadata?.uid ?? '',
+    resources,
+  ) as V1Job[];
+
+  return resourceJobs.map((job: V1Job) => ({
+    job,
+    podsData: getPodsDataForResource(job, resources),
+  }));
+};
+
+const getRouteHost = (
+  route: RouteKind,
+  onlyAdmitted: boolean,
+): string | undefined => {
+  let oldestAdmittedIngress: any;
+  let oldestTransitionTime: string;
+
+  route.status?.ingress.forEach((ingress: RouteIngress) => {
+    const admittedCondition = ingress.conditions?.find(
+      condition => condition.type === 'Admitted' && condition.status === 'True',
+    );
+    if (
+      admittedCondition?.lastTransitionTime &&
+      (!oldestTransitionTime ||
+        oldestTransitionTime > admittedCondition.lastTransitionTime)
+    ) {
+      oldestAdmittedIngress = ingress;
+      oldestTransitionTime = admittedCondition.lastTransitionTime;
+    }
+  });
+
+  if (oldestAdmittedIngress) {
+    return oldestAdmittedIngress.host;
+  }
+
+  return onlyAdmitted ? undefined : route.spec?.host;
+};
+
+export const getRouteWebURL = (route: RouteKind): string => {
+  const scheme = route?.spec?.tls?.termination ? 'https' : 'http';
+  let url = `${scheme}://${getRouteHost(route, false)}`;
+  if (route.spec?.path) {
+    url += route.spec.path;
+  }
+  return url;
+};
+
+export const getRoutesDataForResourceServices = (
+  resources: K8sResponseData,
+  resource: K8sWorkloadResource,
+): RoutesData => {
+  const services = getServicesForResource(
+    resource,
+    resources.services?.data as V1Service[],
+  );
+  const servicesNames = services.map((s: V1Service) => s.metadata?.name ?? '');
+  const routes = (resources.routes?.data as RouteKind[]) ?? [];
+  if (!servicesNames?.length || !routes?.length) {
+    return [];
+  }
+
+  const routesData: RoutesData = routes.reduce(
+    (acc: RoutesData, route: RouteKind) => {
+      if (route.spec?.to?.name && servicesNames.includes(route.spec.to.name)) {
+        acc.push({
+          route,
+          url: getRouteWebURL(route),
+        });
+      }
+      return acc;
+    },
+    [] as RoutesData,
+  );
+
+  return routesData;
+};
+
+export const getRoutesURLforResource = (
+  resources: K8sResponseData,
+  resource: K8sWorkloadResource,
+): string | undefined => {
+  if (!resources.routes?.data) {
+    return undefined;
+  }
+
+  const routesData = getRoutesDataForResourceServices(resources, resource);
+
+  return getIngressesURL(routesData);
+};
+
+export const getUrlForResource = (
+  resources: K8sResponseData,
+  resource: K8sWorkloadResource,
+): string | undefined => {
+  return (
+    getRoutesURLforResource(resources, resource) ||
+    getIngressURLForResource(resources, resource)
+  );
+};
+
+export const getCheCluster = (resources: K8sResponseData) =>
+  resources.checlusters?.data?.find(
+    cc => cc.metadata?.namespace === 'openshift-devspaces',
+  );

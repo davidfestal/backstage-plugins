@@ -1,8 +1,13 @@
-import * as React from 'react';
-import { useDebounceCallback } from './debounce';
-import { updateTopologyDataModel } from '../data-transforms/updateTopologyDataModel';
-import { useDeepCompareMemoize } from './useDeepCompareMemoize';
+import React from 'react';
+
 import { Model } from '@patternfly/react-topology';
+
+import {
+  useDebounceCallback,
+  useDeepCompareMemoize,
+} from '@janus-idp/shared-react';
+
+import { updateTopologyDataModel } from '../data-transforms/updateTopologyDataModel';
 import { K8sResourcesContext } from './K8sResourcesContext';
 
 export const useWorkloadsWatcher = (): {
@@ -18,9 +23,8 @@ export const useWorkloadsWatcher = (): {
       if (!loading) {
         setLoaded(true);
         if (!responseError) {
-          const dataModelRes = await updateTopologyDataModel(
-            watchResourcesData,
-          );
+          const dataModelRes =
+            await updateTopologyDataModel(watchResourcesData);
           if (dataModelRes.model) {
             setDataModel(dataModelRes.model);
           }

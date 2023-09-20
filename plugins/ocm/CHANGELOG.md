@@ -1,3 +1,170 @@
+## @janus-idp/backstage-plugin-ocm [3.2.1](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-ocm@3.2.0...@janus-idp/backstage-plugin-ocm@3.2.1) (2023-09-11)
+
+## @janus-idp/backstage-plugin-ocm [3.2.0](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-ocm@3.1.0...@janus-idp/backstage-plugin-ocm@3.2.0) (2023-08-28)
+
+
+### Features
+
+* **ocm-backend:** add support for new backend system ([#682](https://github.com/janus-idp/backstage-plugins/issues/682)) ([a28b14d](https://github.com/janus-idp/backstage-plugins/commit/a28b14dcb540cd37ee08fc59448d0967b1edbc1d))
+
+## @janus-idp/backstage-plugin-ocm [3.1.0](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-ocm@3.0.4...@janus-idp/backstage-plugin-ocm@3.1.0) (2023-08-14)
+
+
+### Features
+
+* **ts:** transpile each plugin separately ([#634](https://github.com/janus-idp/backstage-plugins/issues/634)) ([b94c4dc](https://github.com/janus-idp/backstage-plugins/commit/b94c4dc50ada328e5ce1bed5fb7c76f64607e1ee))
+
+
+
+### Dependencies
+
+* **@janus-idp/backstage-plugin-ocm-common:** upgraded to 2.2.0
+
+## @janus-idp/backstage-plugin-ocm [3.0.4](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-ocm@3.0.3...@janus-idp/backstage-plugin-ocm@3.0.4) (2023-07-25)
+
+
+### Bug Fixes
+
+* **plugins:** add bearer token to request headers when sending requests, authmiddleware issue ([#498](https://github.com/janus-idp/backstage-plugins/issues/498)) ([86881c3](https://github.com/janus-idp/backstage-plugins/commit/86881c37321d1b446f15ff59b2fcb8ebc8500786))
+
+## @janus-idp/backstage-plugin-ocm [3.0.3](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-ocm@3.0.2...@janus-idp/backstage-plugin-ocm@3.0.3) (2023-07-25)
+
+
+### Other changes
+
+* **ocm:** add unit tests for ocm plugin ([#449](https://github.com/janus-idp/backstage-plugins/issues/449)) ([0fbe7fa](https://github.com/janus-idp/backstage-plugins/commit/0fbe7fa59973e49e8a96f62fab5112aeccecc98e))
+
+
+
+### Dependencies
+
+* **@janus-idp/backstage-plugin-ocm-common:** upgraded to 2.1.1
+
+## @janus-idp/backstage-plugin-ocm [3.0.2](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-ocm@3.0.1...@janus-idp/backstage-plugin-ocm@3.0.2) (2023-06-14)
+
+
+### Other changes
+
+* reorder imports via prettier ([#419](https://github.com/janus-idp/backstage-plugins/issues/419)) ([17f1e6a](https://github.com/janus-idp/backstage-plugins/commit/17f1e6a689bd793a619ec5e42e5cdda0998f78a5))
+
+
+### Documentation
+
+* **ocm:** update the readme with removed frontend components ([#455](https://github.com/janus-idp/backstage-plugins/issues/455)) ([8bfdf36](https://github.com/janus-idp/backstage-plugins/commit/8bfdf363bb6cf715c4cd9ceb0ec096e21948a5e7))
+* update plugin README formatting ([#396](https://github.com/janus-idp/backstage-plugins/issues/396)) ([9b39056](https://github.com/janus-idp/backstage-plugins/commit/9b39056f6c66e9a6a0a5d0c4059420dff66db263)), closes [#295](https://github.com/janus-idp/backstage-plugins/issues/295) [#369](https://github.com/janus-idp/backstage-plugins/issues/369) [#295](https://github.com/janus-idp/backstage-plugins/issues/295) [#369](https://github.com/janus-idp/backstage-plugins/issues/369)
+
+## @janus-idp/backstage-plugin-ocm [3.0.1](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-ocm@3.0.0...@janus-idp/backstage-plugin-ocm@3.0.1) (2023-05-31)
+
+
+### Bug Fixes
+
+* **ocm:** hide logo when not provided ([#410](https://github.com/janus-idp/backstage-plugins/issues/410)) ([3cdccc1](https://github.com/janus-idp/backstage-plugins/commit/3cdccc10a6209f55d36db29b429c168797d64760))
+
+
+### Documentation
+
+* **ocm:** add user docs ([#385](https://github.com/janus-idp/backstage-plugins/issues/385)) ([76f65ff](https://github.com/janus-idp/backstage-plugins/commit/76f65ff95c8e745bc6a85f044f6d6a8492743e95))
+
+## @janus-idp/backstage-plugin-ocm [3.0.0](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-ocm@2.2.11...@janus-idp/backstage-plugin-ocm@3.0.0) (2023-05-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **ocm:** remake OCM UX (#386)
+* **ocm-backend:** The scheduler for the entity provider is now
+configurable by changing the `app-config.yaml` or by changing code in
+`catalog.ts`. The old configuration for entity provider in `catalog.ts`
+is no longer valid.
+
+Signed-off-by: SamoKopecky <skopecky@redhat.com>
+Signed-off-by: Tomas Coufal <tcoufal@redhat.com>
+
+### Features
+
+* **ocm-backend:** add a scheduler configuration option ([#246](https://github.com/janus-idp/backstage-plugins/issues/246)) ([5157185](https://github.com/janus-idp/backstage-plugins/commit/5157185679950b4952f8602dc05f48146d1ad186))
+* **ocm:** remake OCM UX ([#386](https://github.com/janus-idp/backstage-plugins/issues/386)) ([c77a10f](https://github.com/janus-idp/backstage-plugins/commit/c77a10ff80be3635a985ce459c045f56e2c8433b))
+
+
+
+### Dependencies
+
+* **@janus-idp/backstage-plugin-ocm-common:** upgraded to 2.1.0
+
+## @janus-idp/backstage-plugin-ocm [2.2.11](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-ocm@2.2.10...@janus-idp/backstage-plugin-ocm@2.2.11) (2023-05-30)
+
+## @janus-idp/backstage-plugin-ocm [2.2.10](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-ocm@2.2.9...@janus-idp/backstage-plugin-ocm@2.2.10) (2023-05-30)
+
+
+
+### Dependencies
+
+* **@janus-idp/backstage-plugin-ocm-common:** upgraded to 2.0.3
+
+## @janus-idp/backstage-plugin-ocm [2.2.9](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-ocm@2.2.8...@janus-idp/backstage-plugin-ocm@2.2.9) (2023-05-18)
+
+
+### Documentation
+
+* fix misc README issues ([#375](https://github.com/janus-idp/backstage-plugins/issues/375)) ([7ae8876](https://github.com/janus-idp/backstage-plugins/commit/7ae88760c322694b29b558bac78cbc4eb768695c))
+
+## @janus-idp/backstage-plugin-ocm [2.2.8](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-ocm@2.2.7...@janus-idp/backstage-plugin-ocm@2.2.8) (2023-05-18)
+
+
+### Documentation
+
+* update plugin READMEs ([#373](https://github.com/janus-idp/backstage-plugins/issues/373)) ([478560e](https://github.com/janus-idp/backstage-plugins/commit/478560e38cceaa40d976bccf4785956ed58b5221))
+
+## @janus-idp/backstage-plugin-ocm [2.2.7](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-ocm@2.2.6...@janus-idp/backstage-plugin-ocm@2.2.7) (2023-05-17)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#358](https://github.com/janus-idp/backstage-plugins/issues/358)) ([086a9ed](https://github.com/janus-idp/backstage-plugins/commit/086a9ed839f3a6dd1460f0f87b71453a7ed62ea3))
+
+## @janus-idp/backstage-plugin-ocm [2.2.6](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-ocm@2.2.5...@janus-idp/backstage-plugin-ocm@2.2.6) (2023-05-15)
+
+## @janus-idp/backstage-plugin-ocm [2.2.5](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-ocm@2.2.4...@janus-idp/backstage-plugin-ocm@2.2.5) (2023-05-15)
+
+## @janus-idp/backstage-plugin-ocm [2.2.4](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-ocm@2.2.3...@janus-idp/backstage-plugin-ocm@2.2.4) (2023-05-11)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#339](https://github.com/janus-idp/backstage-plugins/issues/339)) ([d19d96d](https://github.com/janus-idp/backstage-plugins/commit/d19d96de7b55c205e0f77528e476104c0685aad2))
+
+## @janus-idp/backstage-plugin-ocm [2.2.3](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-ocm@2.2.2...@janus-idp/backstage-plugin-ocm@2.2.3) (2023-05-09)
+
+
+### Other changes
+
+* **deps:** update all non-major dependencies ([#333](https://github.com/janus-idp/backstage-plugins/issues/333)) ([dce0ea4](https://github.com/janus-idp/backstage-plugins/commit/dce0ea4a9b9f517bd864d39f0b364c68e6a2e143))
+
+## @janus-idp/backstage-plugin-ocm [2.2.2](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-ocm@2.2.1...@janus-idp/backstage-plugin-ocm@2.2.2) (2023-05-08)
+
+
+### Documentation
+
+* review for OCM plugin ([#291](https://github.com/janus-idp/backstage-plugins/issues/291)) ([9316baf](https://github.com/janus-idp/backstage-plugins/commit/9316bafd954f2c6986baa620ea13a74dcb558b29))
+
+
+
+### Dependencies
+
+* **@janus-idp/backstage-plugin-ocm-common:** upgraded to 2.0.2
+
+## @janus-idp/backstage-plugin-ocm [2.2.1](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-ocm@2.2.0...@janus-idp/backstage-plugin-ocm@2.2.1) (2023-05-04)
+
+
+### Other changes
+
+* **deps:** update all non-major dependencies ([#127](https://github.com/janus-idp/backstage-plugins/issues/127)) ([a9d359f](https://github.com/janus-idp/backstage-plugins/commit/a9d359f01448d1b9b4b4d3d9b087052fb6ff16b3))
+
+
+
+### Dependencies
+
+* **@janus-idp/backstage-plugin-ocm-common:** upgraded to 2.0.1
+
 ## @janus-idp/backstage-plugin-ocm [2.2.0](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-ocm@2.1.0...@janus-idp/backstage-plugin-ocm@2.2.0) (2023-04-20)
 
 

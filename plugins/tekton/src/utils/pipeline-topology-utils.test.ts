@@ -1,32 +1,27 @@
 import { RunStatus, WhenStatus } from '@patternfly/react-topology';
-import { PipelineRunKind } from '../types/pipelineRun';
+
 import { mockKubernetesPlrResponse } from '../__fixtures__/1-pipelinesData';
 import {
-  getGraphDataModel,
-  getFinallyTaskHeight,
-  getFinallyTaskWidth,
   extractDepsFromContextVariables,
+  getGraphDataModel,
   getTaskWhenStatus,
 } from './pipeline-topology-utils';
+import { getPipelineRun } from './pipelineRun-utils';
 
-describe('getFinallyTaskHeight', () => {
-  it('expect to return dynamic height for finally task based on tasks length and builder options', () => {
-    const numberOfTasks = 5;
-    const disableBuilder = true;
-    expect(getFinallyTaskHeight(numberOfTasks, disableBuilder)).toBe(290);
-    expect(getFinallyTaskHeight(numberOfTasks, !disableBuilder)).toBe(340);
-  });
-});
-
-describe('getFinallyTaskWidth', () => {
-  it('expect to return larger width if any nodes present in finally section', () => {
-    const numberOfTasks = 5;
-    expect(getFinallyTaskWidth(numberOfTasks)).toBe(205);
+describe('getPipelineRun', () => {
+  it('should return the required pipeline run resource', () => {
+    expect(
+      getPipelineRun(
+        mockKubernetesPlrResponse.pipelineruns,
+        'pipeline-test-wbvtlk',
+      ),
+    ).toEqual(mockKubernetesPlrResponse.pipelineruns[1]);
   });
 
-  it('expect to return smaller width if nodes are not present in finally section', () => {
-    const numberOfTasks = 0;
-    expect(getFinallyTaskWidth(numberOfTasks)).toBe(180);
+  it('should return null if pipeline run doesnot exist', () => {
+    expect(
+      getPipelineRun(mockKubernetesPlrResponse.pipelineruns, 'bnb'),
+    ).toEqual(null);
   });
 });
 
@@ -111,7 +106,7 @@ describe('getGraphDataModel', () => {
 
   it('should return graph, nodes and edges for valid pipelineRun', () => {
     const model = getGraphDataModel(
-      mockKubernetesPlrResponse.pipelineruns[0] as PipelineRunKind,
+      mockKubernetesPlrResponse.pipelineruns[0],
       mockKubernetesPlrResponse.taskruns,
     );
     expect(model?.graph).toBeDefined();

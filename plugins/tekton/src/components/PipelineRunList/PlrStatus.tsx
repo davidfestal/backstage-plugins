@@ -1,4 +1,5 @@
-import * as React from 'react';
+import React from 'react';
+
 import {
   CheckCircleIcon,
   ExclamationCircleIcon,
@@ -6,8 +7,11 @@ import {
   PendingIcon,
   SyncAltIcon,
 } from '@patternfly/react-icons';
-import { PipelineRunKind } from '../../types/pipelineRun';
-import { pipelineRunFilterReducer } from '../../utils/pipeline-filter-reducer';
+
+import {
+  pipelineRunFilterReducer,
+  PipelineRunKind,
+} from '@janus-idp/shared-react';
 
 import './PlrStatus.css';
 
@@ -32,7 +36,9 @@ const getPlrStatusIcon = (plrStatus1: string) => {
   }
 };
 
-const PlrStatus: React.FC<{ obj: PipelineRunKind }> = ({ obj }) => {
+type PlrStatusProps = { obj: PipelineRunKind };
+
+const PlrStatus = ({ obj }: PlrStatusProps) => {
   const plrStatus = pipelineRunFilterReducer(obj);
   return (
     <>

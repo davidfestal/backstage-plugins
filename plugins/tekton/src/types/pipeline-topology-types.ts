@@ -4,10 +4,14 @@ import {
   RunStatus,
   WhenStatus,
 } from '@patternfly/react-topology';
+
+import {
+  PipelineRunKind,
+  PipelineTask,
+  TaskRunKind,
+} from '@janus-idp/shared-react';
+
 import { AddNodeDirection, NodeType } from '../consts/pipeline-topology-const';
-import { PipelineTask } from './pipeline';
-import { PipelineRunKind } from './pipelineRun';
-import { TaskRunKind } from './taskRun';
 
 // Builder Callbacks
 export type NewTaskListNodeCallback = (direction: AddNodeDirection) => void;
@@ -60,8 +64,6 @@ export type FinallyNodeData = {
 
 export type PipelineBuilderTaskBase = { name: string; runAfter?: string[] };
 
-export type PipelineBuilderListTask = PipelineBuilderTaskBase;
-
 export type PipelineBuilderLoadingTask = PipelineBuilderTaskBase & {
   isFinallyTask: boolean;
   resource: TaskRunKind;
@@ -107,7 +109,6 @@ export type BuilderNodeModelData = PipelineRunAfterNodeModelData & {
   onAddNode: NewTaskListNodeCallback;
   onNodeSelection: NodeSelectionCallback;
 };
-export type SpacerNodeModelData = PipelineRunAfterNodeModelData;
 export type TaskNodeModelData = PipelineRunAfterNodeModelData & {
   task: PipelineTask;
   pipelineRun?: PipelineRunKind;

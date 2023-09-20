@@ -1,19 +1,22 @@
 # Quay plugin for Backstage
 
-This plugin will show you information about your container images within Quay registry
+The Quay plugin displays the information about your container images within the Quay registry in your Backstage application.
 
-## Getting started
+## For administrators
 
-1. Install the plugin
+### Installation
 
-   ```bash
+1. Install the Quay plugin using the following command:
+
+   ```console
    yarn workspace app add @janus-idp/backstage-plugin-quay
    ```
 
-2. Set the proxy to desired Quay server
+### Configuration
 
-   ```yaml
-   # app-config.yaml
+1. Set the proxy to the desired Quay server in the `app-config.yaml` file as follows:
+
+   ```yaml title="app-config.yaml"
    proxy:
      '/quay/api':
        target: 'https://quay.io'
@@ -30,15 +33,16 @@ This plugin will show you information about your container images within Quay re
      uiUrl: 'https://quay.io'
    ```
 
-3. Enable additional tab on the entity view page
+2. Enable an additional tab on the entity view page in `packages/app/src/components/catalog/EntityPage.tsx`:
 
-   ```ts
-   // packages/app/src/components/catalog/EntityPage.tsx
-   import { QuayPage, isQuayAvailable } from '@janus-idp/backstage-plugin-quay';
+   ```tsx title="packages/app/src/components/catalog/EntityPage.tsx"
+   /* highlight-add-next-line */
+   import { isQuayAvailable, QuayPage } from '@janus-idp/backstage-plugin-quay';
 
    const serviceEntityPage = (
      <EntityPageLayout>
-       // ...
+       {/* ... */}
+       {/* highlight-add-next-line */}
        <EntityLayout.Route if={isQuayAvailable} path="/quay" title="Quay">
          <QuayPage />
        </EntityLayout.Route>
@@ -46,22 +50,40 @@ This plugin will show you information about your container images within Quay re
    );
    ```
 
-4. Annotate your entity with
+3. Annotate your entity with the following annotations:
 
-   ```yaml
+   ```yaml title="catalog-info.yaml"
    metadata:
      annotations:
        'quay.io/repository-slug': `<ORGANIZATION>/<REPOSITORY>',
    ```
 
-## Development
+## For users
 
-In [Backstage plugin terminology](https://backstage.io/docs/local-dev/cli-build-system#package-roles), this is a `frontend-plugin`. However it requires backend proxy to be available at all times. Development environment therefore requires you to run a backend instance as well. You can start a live dev session from the repository root using following commands concurrently:
+### Using the Quay plugin in Backstage
 
-```
-yarn start-backend
-```
+Quay is a front-end plugin that enables you to view the information about the container images.
 
-```
-yarn workspace @janus-idp/backstage-plugin-quay run start
-```
+#### Prerequisites
+
+- Your Backstage application is installed and running.
+- You have installed the Quay plugin. For installation process, see [Installation](#installation).
+
+#### Procedure
+
+1. Open your Backstage application and select a component from the **Catalog** page.
+1. Go to the **Image Registry** tab.
+
+   The **Image Registry** tab in the Backstage UI contains a list of container images and related information, such as **TAG**, **LAST MODIFIED**, **SECURITY SCAN**, **SIZE**, **EXPIRES**, and **MANIFEST**.
+
+   ![quay-tab](./images/quay-plugin-backstage1.png)
+
+1. If a container image does not pass the security scan, select the security scan value of the image to check the vulnerabilities.
+
+   ![quay-tab](./images/quay-plugin-backstage2.png)
+
+   The vulnerabilities page displays the associated advisory with a link, severity, package name, and current and fixed versions.
+
+   ![quay-tab-vulnerabilities](./images/quay-plugin-backstage3.png)
+
+   The advisory link redirects to the Red Hat Security Advisory page that contains detailed information about the advisory, including the solution.

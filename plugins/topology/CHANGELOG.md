@@ -1,3 +1,265 @@
+## @janus-idp/backstage-plugin-topology [1.15.5](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.15.4...@janus-idp/backstage-plugin-topology@1.15.5) (2023-09-11)
+
+## @janus-idp/backstage-plugin-topology [1.15.4](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.15.3...@janus-idp/backstage-plugin-topology@1.15.4) (2023-08-31)
+
+## @janus-idp/backstage-plugin-topology [1.15.3](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.15.2...@janus-idp/backstage-plugin-topology@1.15.3) (2023-08-30)
+
+
+### Bug Fixes
+
+* **topology:** fix code smells ([#671](https://github.com/janus-idp/backstage-plugins/issues/671)) ([9743d86](https://github.com/janus-idp/backstage-plugins/commit/9743d86a76e9155e39769b61adcbe25d35b58f00))
+
+## @janus-idp/backstage-plugin-topology [1.15.2](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.15.1...@janus-idp/backstage-plugin-topology@1.15.2) (2023-08-29)
+
+
+### Documentation
+
+* **topology:** update README.md ([#678](https://github.com/janus-idp/backstage-plugins/issues/678)) ([4f08af3](https://github.com/janus-idp/backstage-plugins/commit/4f08af3a6e716f6b584c827b2723cc75abda1fac))
+
+## @janus-idp/backstage-plugin-topology [1.15.1](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.15.0...@janus-idp/backstage-plugin-topology@1.15.1) (2023-08-24)
+
+
+### Documentation
+
+* update tekton and topology documentation with pod log permissions ([#668](https://github.com/janus-idp/backstage-plugins/issues/668)) ([5b0a9f7](https://github.com/janus-idp/backstage-plugins/commit/5b0a9f77448d624c50f58e19d7f439700bef9cfe))
+
+## @janus-idp/backstage-plugin-topology [1.15.0](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.14.3...@janus-idp/backstage-plugin-topology@1.15.0) (2023-08-14)
+
+
+### Features
+
+* **ts:** transpile each plugin separately ([#634](https://github.com/janus-idp/backstage-plugins/issues/634)) ([b94c4dc](https://github.com/janus-idp/backstage-plugins/commit/b94c4dc50ada328e5ce1bed5fb7c76f64607e1ee))
+
+
+
+### Dependencies
+
+* **@janus-idp/shared-react:** upgraded to 1.3.0
+
+## @janus-idp/backstage-plugin-topology [1.14.3](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.14.2...@janus-idp/backstage-plugin-topology@1.14.3) (2023-08-14)
+
+
+
+### Dependencies
+
+* **@janus-idp/shared-react:** upgraded to 1.2.2
+
+## @janus-idp/backstage-plugin-topology [1.14.2](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.14.1...@janus-idp/backstage-plugin-topology@1.14.2) (2023-08-14)
+
+
+
+### Dependencies
+
+* **@janus-idp/shared-react:** upgraded to 1.2.1
+
+## @janus-idp/backstage-plugin-topology [1.14.1](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.14.0...@janus-idp/backstage-plugin-topology@1.14.1) (2023-08-11)
+
+
+
+### Dependencies
+
+* **@janus-idp/shared-react:** upgraded to 1.2.0
+
+## @janus-idp/backstage-plugin-topology [1.14.0](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.13.3...@janus-idp/backstage-plugin-topology@1.14.0) (2023-08-11)
+
+
+### Features
+
+* **topology:** add runtime icon to topology node ([#615](https://github.com/janus-idp/backstage-plugins/issues/615)) ([dc3769b](https://github.com/janus-idp/backstage-plugins/commit/dc3769b9e88ac2187c38ae29ab0863f5a8463621))
+
+## @janus-idp/backstage-plugin-topology [1.13.3](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.13.2...@janus-idp/backstage-plugin-topology@1.13.3) (2023-08-10)
+
+
+### Bug Fixes
+
+* **topology:** fix pod status info in topology side panel ([#620](https://github.com/janus-idp/backstage-plugins/issues/620)) ([c4c428c](https://github.com/janus-idp/backstage-plugins/commit/c4c428c44d9fec1fdfb5fe1dd5205c3abc6b5cd1))
+
+## @janus-idp/backstage-plugin-topology [1.13.2](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.13.1...@janus-idp/backstage-plugin-topology@1.13.2) (2023-08-10)
+
+## @janus-idp/backstage-plugin-topology [1.13.1](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.13.0...@janus-idp/backstage-plugin-topology@1.13.1) (2023-08-10)
+
+
+
+### Dependencies
+
+* **@janus-idp/shared-react:** upgraded to 1.1.1
+
+## @janus-idp/backstage-plugin-topology [1.13.0](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.12.0...@janus-idp/backstage-plugin-topology@1.13.0) (2023-08-09)
+
+
+### Features
+
+* **topology:** add download pod logs functionality ([#616](https://github.com/janus-idp/backstage-plugins/issues/616)) ([63ae6f4](https://github.com/janus-idp/backstage-plugins/commit/63ae6f495d8c4739082ffae188094a8321ef7496))
+
+## @janus-idp/backstage-plugin-topology [1.12.0](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.11.0...@janus-idp/backstage-plugin-topology@1.12.0) (2023-08-08)
+
+
+### Features
+
+* **topology:** show only latest 3 pods/plrs in node sidebar ([#577](https://github.com/janus-idp/backstage-plugins/issues/577)) ([2a56f8e](https://github.com/janus-idp/backstage-plugins/commit/2a56f8e98f615201cb95fa8f6ccf1724d6e5778c))
+
+## @janus-idp/backstage-plugin-topology [1.11.0](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.10.0...@janus-idp/backstage-plugin-topology@1.11.0) (2023-07-26)
+
+
+### Features
+
+* **topology:** add edit code node decorator ([#535](https://github.com/janus-idp/backstage-plugins/issues/535)) ([8b5893a](https://github.com/janus-idp/backstage-plugins/commit/8b5893a62a2b23274666d5a7f26ad6e3978741b1))
+
+## @janus-idp/backstage-plugin-topology [1.10.0](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.9.0...@janus-idp/backstage-plugin-topology@1.10.0) (2023-07-25)
+
+
+### Features
+
+* **shared-react:** update shared plugin ([#532](https://github.com/janus-idp/backstage-plugins/issues/532)) ([88ec74e](https://github.com/janus-idp/backstage-plugins/commit/88ec74e704c185785329d12f129bd8e1590ac1c8))
+* **topology:** show pipeline decorator on topology node ([#447](https://github.com/janus-idp/backstage-plugins/issues/447)) ([f983c47](https://github.com/janus-idp/backstage-plugins/commit/f983c47d8d82433fe188c59d8d1569c1be30a7db))
+
+
+### Bug Fixes
+
+* **topology:** fix topology node tooltip position ([#538](https://github.com/janus-idp/backstage-plugins/issues/538)) ([07e9086](https://github.com/janus-idp/backstage-plugins/commit/07e90862ac8d5dc58e4730fbadc57109071c35c5))
+
+
+
+### Dependencies
+
+* **@janus-idp/shared-react:** upgraded to 1.1.0
+
+## @janus-idp/backstage-plugin-topology [1.9.0](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.8.0...@janus-idp/backstage-plugin-topology@1.9.0) (2023-06-30)
+
+
+### Features
+
+* **topology:** support for logviewer for pods based on container ([#464](https://github.com/janus-idp/backstage-plugins/issues/464)) ([cf2af63](https://github.com/janus-idp/backstage-plugins/commit/cf2af637b2e98e0e0e8d9c16ce40bb04021d4a91))
+
+## @janus-idp/backstage-plugin-topology [1.8.0](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.7.2...@janus-idp/backstage-plugin-topology@1.8.0) (2023-06-26)
+
+
+### Features
+
+* **topology:** show pipeline-runs list in sidepanel ([#403](https://github.com/janus-idp/backstage-plugins/issues/403)) ([b0d805a](https://github.com/janus-idp/backstage-plugins/commit/b0d805a259c03316eb94a80a42a57b93a97b4083))
+
+## @janus-idp/backstage-plugin-topology [1.7.2](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.7.1...@janus-idp/backstage-plugin-topology@1.7.2) (2023-06-21)
+
+
+### Documentation
+
+* **topology:** fixes to topology readme ([#468](https://github.com/janus-idp/backstage-plugins/issues/468)) ([b94f1ae](https://github.com/janus-idp/backstage-plugins/commit/b94f1ae0b241636ab9a6b74c063a4e31dc8016ed))
+
+## @janus-idp/backstage-plugin-topology [1.7.1](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.7.0...@janus-idp/backstage-plugin-topology@1.7.1) (2023-06-14)
+
+
+### Other changes
+
+* reorder imports via prettier ([#419](https://github.com/janus-idp/backstage-plugins/issues/419)) ([17f1e6a](https://github.com/janus-idp/backstage-plugins/commit/17f1e6a689bd793a619ec5e42e5cdda0998f78a5))
+
+
+### Documentation
+
+* update plugin README formatting ([#396](https://github.com/janus-idp/backstage-plugins/issues/396)) ([9b39056](https://github.com/janus-idp/backstage-plugins/commit/9b39056f6c66e9a6a0a5d0c4059420dff66db263)), closes [#295](https://github.com/janus-idp/backstage-plugins/issues/295) [#369](https://github.com/janus-idp/backstage-plugins/issues/369) [#295](https://github.com/janus-idp/backstage-plugins/issues/295) [#369](https://github.com/janus-idp/backstage-plugins/issues/369)
+
+## @janus-idp/backstage-plugin-topology [1.7.0](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.6.3...@janus-idp/backstage-plugin-topology@1.7.0) (2023-05-31)
+
+
+### Features
+
+* **topology:** visualize Route resource in decorator and sidebar for supported workloads ([#378](https://github.com/janus-idp/backstage-plugins/issues/378)) ([1a489b3](https://github.com/janus-idp/backstage-plugins/commit/1a489b328a10f79fc136ff47a55d9081a4f2856d))
+
+## @janus-idp/backstage-plugin-topology [1.6.3](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.6.2...@janus-idp/backstage-plugin-topology@1.6.3) (2023-05-30)
+
+## @janus-idp/backstage-plugin-topology [1.6.2](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.6.1...@janus-idp/backstage-plugin-topology@1.6.2) (2023-05-30)
+
+## @janus-idp/backstage-plugin-topology [1.6.1](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.6.0...@janus-idp/backstage-plugin-topology@1.6.1) (2023-05-30)
+
+
+### Bug Fixes
+
+* **topology:** close workload sidepanel on outside-click ([#399](https://github.com/janus-idp/backstage-plugins/issues/399)) ([e870b6f](https://github.com/janus-idp/backstage-plugins/commit/e870b6f1bdca7b1fd9823560bb5f66ffbaff0033))
+
+## @janus-idp/backstage-plugin-topology [1.6.0](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.5.11...@janus-idp/backstage-plugin-topology@1.6.0) (2023-05-26)
+
+
+### Features
+
+* **topology:** add specific details for all supported workloads ([#295](https://github.com/janus-idp/backstage-plugins/issues/295)) ([788c23a](https://github.com/janus-idp/backstage-plugins/commit/788c23a09ba3402e2f8b582a0b7bff635c412687))
+
+
+### Bug Fixes
+
+* **topology:** persist selected topology node id in new tab ([#369](https://github.com/janus-idp/backstage-plugins/issues/369)) ([28e6d82](https://github.com/janus-idp/backstage-plugins/commit/28e6d825508d33f18bbfa17b8c5e0e222328700c))
+
+## @janus-idp/backstage-plugin-topology [1.5.11](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.5.10...@janus-idp/backstage-plugin-topology@1.5.11) (2023-05-22)
+
+
+### Documentation
+
+* **Topology:** updates user docs ([#381](https://github.com/janus-idp/backstage-plugins/issues/381)) ([417964a](https://github.com/janus-idp/backstage-plugins/commit/417964a65ad65dfdef4d705a7fa598574e1409fd))
+
+## @janus-idp/backstage-plugin-topology [1.5.10](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.5.9...@janus-idp/backstage-plugin-topology@1.5.10) (2023-05-18)
+
+
+### Documentation
+
+* update plugin READMEs ([#373](https://github.com/janus-idp/backstage-plugins/issues/373)) ([478560e](https://github.com/janus-idp/backstage-plugins/commit/478560e38cceaa40d976bccf4785956ed58b5221))
+
+## @janus-idp/backstage-plugin-topology [1.5.9](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.5.8...@janus-idp/backstage-plugin-topology@1.5.9) (2023-05-17)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#358](https://github.com/janus-idp/backstage-plugins/issues/358)) ([086a9ed](https://github.com/janus-idp/backstage-plugins/commit/086a9ed839f3a6dd1460f0f87b71453a7ed62ea3))
+
+## @janus-idp/backstage-plugin-topology [1.5.8](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.5.7...@janus-idp/backstage-plugin-topology@1.5.8) (2023-05-15)
+
+## @janus-idp/backstage-plugin-topology [1.5.7](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.5.6...@janus-idp/backstage-plugin-topology@1.5.7) (2023-05-15)
+
+## @janus-idp/backstage-plugin-topology [1.5.6](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.5.5...@janus-idp/backstage-plugin-topology@1.5.6) (2023-05-11)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#339](https://github.com/janus-idp/backstage-plugins/issues/339)) ([d19d96d](https://github.com/janus-idp/backstage-plugins/commit/d19d96de7b55c205e0f77528e476104c0685aad2))
+
+## @janus-idp/backstage-plugin-topology [1.5.5](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.5.4...@janus-idp/backstage-plugin-topology@1.5.5) (2023-05-09)
+
+
+### Bug Fixes
+
+* **plugins:** remove React.FC types ([#335](https://github.com/janus-idp/backstage-plugins/issues/335)) ([f3d40af](https://github.com/janus-idp/backstage-plugins/commit/f3d40af9c6e55e5699ed78d07ae6617e25b33c18))
+
+
+### Other changes
+
+* **deps:** update all non-major dependencies ([#333](https://github.com/janus-idp/backstage-plugins/issues/333)) ([dce0ea4](https://github.com/janus-idp/backstage-plugins/commit/dce0ea4a9b9f517bd864d39f0b364c68e6a2e143))
+* **plugins:** remove react namespace import ([#336](https://github.com/janus-idp/backstage-plugins/issues/336)) ([01ab4aa](https://github.com/janus-idp/backstage-plugins/commit/01ab4aaf9c88c58c955903372b556f33e2e6461e))
+
+## @janus-idp/backstage-plugin-topology [1.5.4](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.5.3...@janus-idp/backstage-plugin-topology@1.5.4) (2023-05-08)
+
+
+### Documentation
+
+* review for Topology plugin ([#269](https://github.com/janus-idp/backstage-plugins/issues/269)) ([10f0910](https://github.com/janus-idp/backstage-plugins/commit/10f0910ddab0b826b7d968bd569ab0442caef1ed))
+
+## @janus-idp/backstage-plugin-topology [1.5.3](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.5.2...@janus-idp/backstage-plugin-topology@1.5.3) (2023-05-05)
+
+
+### Bug Fixes
+
+* **topology:** adds wrapper to topology view for consistent border ([#326](https://github.com/janus-idp/backstage-plugins/issues/326)) ([51a5a0d](https://github.com/janus-idp/backstage-plugins/commit/51a5a0dc2216517785e1ef0cf397bc05cd8a6a98))
+
+## @janus-idp/backstage-plugin-topology [1.5.2](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.5.1...@janus-idp/backstage-plugin-topology@1.5.2) (2023-05-04)
+
+
+### Other changes
+
+* **deps:** update all non-major dependencies ([#127](https://github.com/janus-idp/backstage-plugins/issues/127)) ([a9d359f](https://github.com/janus-idp/backstage-plugins/commit/a9d359f01448d1b9b4b4d3d9b087052fb6ff16b3))
+
+## @janus-idp/backstage-plugin-topology [1.5.1](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.5.0...@janus-idp/backstage-plugin-topology@1.5.1) (2023-05-04)
+
+
+### Bug Fixes
+
+* **topology:** Fix topology sidepanel css ([#289](https://github.com/janus-idp/backstage-plugins/issues/289)) ([37c6d2e](https://github.com/janus-idp/backstage-plugins/commit/37c6d2e89b744c2435bde8c6f58cb7b03e5f8e84))
+
 ## @janus-idp/backstage-plugin-topology [1.5.0](https://github.com/janus-idp/backstage-plugins/compare/@janus-idp/backstage-plugin-topology@1.4.2...@janus-idp/backstage-plugin-topology@1.5.0) (2023-04-18)
 
 

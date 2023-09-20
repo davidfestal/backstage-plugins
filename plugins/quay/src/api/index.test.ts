@@ -1,8 +1,11 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { rest } from 'msw';
+// eslint-disable-next-line @backstage/no-undeclared-imports
 import { UrlPatternDiscovery } from '@backstage/core-app-api';
-import { QuayApiClient, QuayApiV1 } from './index';
+import { IdentityApi } from '@backstage/core-plugin-api';
+
+import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+
+import { QuayApiClient, QuayApiV1 } from './index';
 
 const LOCAL_ADDR = 'https://localhost:5050/quay/api/';
 
@@ -102,12 +105,21 @@ describe('QuayApiClient', () => {
     getOptionalString: getOptionalStringFn,
   });
 
+  const bearerToken = 'Bearer token';
+
+  const identityApi = {
+    async getCredentials() {
+      return { token: bearerToken };
+    },
+  } as IdentityApi;
+
   beforeEach(() => {
     quayApi = new QuayApiClient({
       configApi: getConfigApi(() => {
         return '/quay/api';
       }),
       discoveryApi: UrlPatternDiscovery.compile('https://localhost:5050'),
+      identityApi: identityApi,
     });
   });
 
@@ -115,6 +127,7 @@ describe('QuayApiClient', () => {
     quayApi = new QuayApiClient({
       configApi: getConfigApi(jest.fn()),
       discoveryApi: UrlPatternDiscovery.compile('https://localhost:5050'),
+      identityApi: identityApi,
     });
 
     const result = await quayApi.getTags('foo', 'bar');

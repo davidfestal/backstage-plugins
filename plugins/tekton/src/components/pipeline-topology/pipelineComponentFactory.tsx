@@ -1,21 +1,23 @@
-import * as React from 'react';
+import React from 'react';
+
 import {
-  GraphElement,
   ComponentFactory,
-  ModelKind,
-  SpacerNode,
-  DefaultTaskGroup,
-  withPanZoom,
-  GraphComponent,
-  TaskEdge,
   DagreLayout,
-  LayoutFactory,
+  DefaultTaskGroup,
   Graph,
+  GraphComponent,
+  GraphElement,
+  LayoutFactory,
+  ModelKind,
   PipelineDagreLayout,
+  SpacerNode,
+  TaskEdge,
+  withPanZoom,
 } from '@patternfly/react-topology';
+
 import { NodeType, PipelineLayout } from '../../consts/pipeline-topology-const';
-import PipelineTaskNode from './PipelineTaskNode';
 import { getLayoutData } from '../../utils/pipeline-topology-utils';
+import PipelineTaskNode from './PipelineTaskNode';
 import TaskGroupEdge from './TaskGroupEdge';
 
 const GROUPED_EDGE_TYPE = 'GROUPED_EDGE';
@@ -46,20 +48,20 @@ export const layoutFactory: LayoutFactory = (type: string, graph: Graph) => {
 const pipelineComponentFactory: ComponentFactory = (
   kind: ModelKind,
   type: string,
-): React.ComponentType<{ element: GraphElement }> | any => {
+): React.ComponentType<{ element: GraphElement }> | undefined => {
   if (kind === ModelKind.graph) {
     return withPanZoom()(GraphComponent) as React.ComponentType<{
       element: GraphElement;
     }>;
   }
   if (kind === ModelKind.edge) {
-    return TaskEdge;
+    return TaskEdge as React.ComponentType<{ element: GraphElement }>;
   }
   if (kind === ModelKind.node) {
     switch (type) {
       case NodeType.TASK_NODE:
       case NodeType.FINALLY_NODE:
-        return PipelineTaskNode;
+        return PipelineTaskNode as React.ComponentType<any>;
       case 'task-group':
       case NodeType.FINALLY_GROUP:
         return DefaultTaskGroup as React.ComponentType<{
@@ -76,7 +78,7 @@ const pipelineComponentFactory: ComponentFactory = (
         return undefined;
     }
   }
-  return null;
+  return undefined;
 };
 
 export default pipelineComponentFactory;

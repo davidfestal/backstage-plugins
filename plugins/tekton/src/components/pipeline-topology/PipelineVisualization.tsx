@@ -1,16 +1,19 @@
 import React from 'react';
-import { isEmpty } from 'lodash';
-import { Split, SplitItem, Alert } from '@patternfly/react-core';
+
 import { Typography } from '@material-ui/core';
-import ResourceStatus from '../common/ResourceStatus';
-import Status from '../common/Status';
-import { pipelineRunStatus } from '../../utils/pipeline-filter-reducer';
-import { PipelineLayout } from './PipelineLayout';
+import { Split, SplitItem } from '@patternfly/react-core';
+
+import {
+  PipelineRunKind,
+  pipelineRunStatus,
+  TaskRunKind,
+} from '@janus-idp/shared-react';
+
 import { useDarkTheme } from '../../hooks/useDarkTheme';
-import { TaskRunKind } from '../../types/taskRun';
-import { PipelineRunKind } from '../../types/pipelineRun';
-import { getGraphDataModel } from '../../utils/pipeline-topology-utils';
 import { PipelineRunModel } from '../../models';
+import { getGraphDataModel } from '../../utils/pipeline-topology-utils';
+import { ResourceStatus, Status } from '../common';
+import { PipelineLayout } from './PipelineLayout';
 
 import './PipelineVisualization.css';
 
@@ -19,39 +22,19 @@ type PipelineVisualizationProps = {
   taskRuns: TaskRunKind[];
 };
 
-export const PipelineVisualization: React.FC<PipelineVisualizationProps> = ({
+export const PipelineVisualization = ({
   pipelineRun,
   taskRuns,
-}) => {
+}: PipelineVisualizationProps) => {
   useDarkTheme();
 
-  if (!pipelineRun || isEmpty(pipelineRun)) {
-    return (
-      <Alert
-        data-testid="no-pipelinerun-alert"
-        variant="info"
-        isInline
-        title="No PipelineRun to visualize."
-      />
-    );
-  }
+  const model = getGraphDataModel(pipelineRun ?? undefined, taskRuns ?? []);
 
-  const model = getGraphDataModel(pipelineRun, taskRuns);
-  if (!model || (model.nodes.length === 0 && model.edges.length === 0)) {
-    return (
-      <Alert
-        data-testid="no-tasks-alert"
-        variant="info"
-        isInline
-        title="This PipelineRun has no tasks to visualize."
-      />
-    );
-  }
   return (
     <>
       {pipelineRun?.metadata?.name && (
         <Split className="bs-tkn-pipeline-visualization__label">
-          <SplitItem style={{ marginRight: 'var(--pf-global--spacer--sm)' }}>
+          <SplitItem style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}>
             <span
               className="badge"
               style={{ backgroundColor: PipelineRunModel.color }}
@@ -69,12 +52,18 @@ export const PipelineVisualization: React.FC<PipelineVisualizationProps> = ({
           </SplitItem>
         </Split>
       )}
-      <div
-        data-testid="pipeline-visualization"
-        className="bs-tkn-pipeline-visualization__layout"
-      >
-        <PipelineLayout model={model} />
-      </div>
+      {!model || (model.nodes.length === 0 && model.edges.length === 0) ? (
+        <div data-testid="pipeline-no-tasks">
+          This Pipeline Run has no tasks to visualize
+        </div>
+      ) : (
+        <div
+          data-testid="pipelineRun-visualization"
+          className="bs-tkn-pipeline-visualization__layout"
+        >
+          <PipelineLayout model={model} />
+        </div>
+      )}
     </>
   );
 };

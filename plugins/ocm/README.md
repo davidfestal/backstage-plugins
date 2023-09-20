@@ -1,108 +1,122 @@
 # Open Cluster Management plugin for Backstage
 
-This plugin integrates your Backstage instance with Open Cluster Management's MultiClusterHub and MultiCluster Engine.
-
-## Prerequisites
-
-1. OCM deployed and configured on a kubernetes cluster
-2. Installed [Kubernetes plugin for Backstage](https://backstage.io/docs/features/kubernetes/overview)
-3. Kubernetes plugin is properly configured and able to connect to the Hub cluster for OCM via a `ServiceAccount` (the cluster is accessed by backstage backend, therefore it requires a permanent connection with constant RBAC scope)
-4. Following `ClusterRole` must be granted to `ServiceAccount` accessing the Hub cluster:
-   ```yaml
-   kind: ClusterRole
-   apiVersion: rbac.authorization.k8s.io/v1
-   metadata:
-     name: backstage-ocm-plugin
-   rules:
-     - apiGroups:
-         - cluster.open-cluster-management.io
-       resources:
-         - managedclusters
-       verbs:
-         - get
-         - watch
-         - list
-     - apiGroups:
-         - internal.open-cluster-management.io
-       resources:
-         - managedclusterinfos
-       verbs:
-         - get
-         - watch
-         - list
-   ```
+The Open Cluster Management (OCM) plugin integrates your Backstage instance with the `MultiClusterHub` and `MultiCluster` engines of OCM.
 
 ## Capabilities
 
-- All clusters represented as `ManagedCluster`s in MultiClusterHub/MCE are discovered and imported into Backstage catalog:
+The OCM plugin has the following capabilities:
+
+- All clusters represented as `ManagedCluster` in `MultiClusterHub` or MCE are discovered and imported into the Backstage catalog, such as:
   - Entity is defined as `kind: Resource` with `spec.type` set to `kubernetes-cluster`.
-  - Links to OCP console, OCM console and OpenShift Cluster Manager are provided in `metadata.links`.
-- Show real time data from OCM on Resource entity page including:
-  - Cluster current status (up, down, etc.)
-  - Cluster details (console link, OCP and Kubernetes version, etc.)
+  - Links to the OpenShift Container Platform (OCP) console, OCM console, and OpenShift Cluster Manager are provided in `metadata.links`.
+- Shows real-time data from OCM on the Resource entity page, including:
+  - Cluster current status (up or down)
+  - Cluster nodes status (up or down)
+  - Cluster details (console link, OCP, and Kubernetes version)
   - Details about available compute resources on the cluster
 
-## Usage
+## For administrators
 
-This plugin is made up of 2 packages:
+### Installation
 
-1. `@janus-idp/backstage-plugin-ocm-backend` connects backstage server to OCM.
-2. `@janus-idp/backstage-plugin-ocm` contains frontend components, requires `*-backend` to be present and set up.
+The OCM plugin is composed of two packages, including:
 
-> If you are interested in Resource discovery only and you don't want to use any of our frontend components, you can install and configure only the `@janus-idp/backstage-plugin-ocm-backend` package.
+- `@janus-idp/backstage-plugin-ocm-backend` package connects the Backstage server to OCM. For setup process, see [Backend Setup](#setting-up-the-ocm-backend-package)
+- The `@janus-idp/backstage-plugin-ocm` package, which contains frontend components requires the `\*-backend` package to be present and properly set up. For detailed instructions on setting up the backend, refer to the [Backend Setup](#setting-up-the-ocm-backend-package) section.
 
-### Setup `@janus-idp/backstage-plugin-ocm-backend`
+**NOTE**
+If you are interested in Resource discovery and do not want any of the front-end components, then you can install and configure the `@janus-idp/backstage-plugin-ocm-backend` package only.
 
-1. Install the backend plugin:
+---
 
-   ```sh
+#### Prerequisites
+
+- OCM is deployed and configured on a Kubernetes cluster.
+- [Kubernetes plugin for Backstage](https://backstage.io/docs/features/kubernetes) is installed.
+- A `ClusterRole` is granted to `ServiceAccount` accessing the hub cluster as follows:
+
+  ```yaml
+  kind: ClusterRole
+  apiVersion: rbac.authorization.k8s.io/v1
+  metadata:
+    name: backstage-ocm-plugin
+  rules:
+    - apiGroups:
+        - cluster.open-cluster-management.io
+      resources:
+        - managedclusters
+      verbs:
+        - get
+        - watch
+        - list
+    - apiGroups:
+        - internal.open-cluster-management.io
+      resources:
+        - managedclusterinfos
+      verbs:
+        - get
+        - watch
+        - list
+  ```
+
+#### Setting up the OCM backend package
+
+1. Install the OCM backend plugin using the following command:
+
+   ```console
    yarn workspace backend add @janus-idp/backstage-plugin-ocm-backend
    ```
 
-2. Next, you need to configure it. There are two possible configurations.
+1. Configure the OCM backend plugin using one of the following configurations:
 
-   1. The information about your hub is provided purely by the OCM configuration. In order to use this configuration please add the following to your `app-config.yaml` file:
+   - The OCM configuration provides the information about your hub. To use the OCM configuration, add the following code to your `app-config.yaml` file:
 
-      ```yaml
-      # app-config.yaml
-      catalog:
-        providers:
-          ocm:
-            env: # Key is reflected as provider ID. Defines and claims plugin instance ownership of entities
-              name: # Name that the hub cluster will assume in Backstage Catalog (in OCM this is always local-cluster which can be confusing)
-              url: # Url of the hub cluster API endpoint
-              serviceAccountToken: # Token used for querying data from the hub
-              skipTLSVerify: # Skip TLS certificate verification, defaults to false
-              caData: # Base64-encoded CA bundle in PEM format
-      ```
+     ```yaml title="app-config.yaml"
+     catalog:
+       providers:
+         ocm:
+           env: # Key is reflected as provider ID. Defines and claims plugin instance ownership of entities
+             name: # Name that the hub cluster will assume in Backstage Catalog (in OCM this is always local-cluster which can be confusing)
+             url: # Url of the hub cluster API endpoint
+             serviceAccountToken: # Token used for querying data from the hub
+             skipTLSVerify: # Skip TLS certificate verification, defaults to false
+             caData: # Base64-encoded CA bundle in PEM format
+     ```
 
-   2. The hub configuration can be tied to the kubernetes plugin configuration by providing the name of the hub. This is useful when you already use a kubernetes plugin in your backstage instance. Please add following to your `app-config.yaml` file:
+   - If the Backstage Kubernetes plugin is installed and configured to connect to the hub cluster, then you can bind the both hub and Kubernetes configuration by providing the name of the hub in the `app-config.yaml` as follows:
 
-      ```yaml
-      # app-config.yaml
-      kubernetes:
-        serviceLocatorMethod:
-          type: "multiTenant"
-        clusterLocatorMethods:
-          - type: "config"
-            clusters:
-              - name: <cluster-name>
-              ...
+     ```yaml title="app-config.yaml"
+     kubernetes:
+       serviceLocatorMethod:
+         type: 'multiTenant'
+       clusterLocatorMethods:
+         - type: 'config'
+           clusters:
+             # highlight-next-line
+             - name: <cluster-name>
+             # ...
 
-      catalog:
-        providers:
-          ocm:
-            env: # Key is reflected as provider ID. Defines and claims plugin instance ownership of entities
-              kubernetesPluginRef: <cluster-name> # Match the cluster name in kubernetes plugin config
-      ```
+     catalog:
+       providers:
+         ocm:
+           env: # Key is reflected as provider ID. Defines and claims plugin instance ownership of entities
+             # highlight-next-line
+             kubernetesPluginRef: <cluster-name> # Match the cluster name in kubernetes plugin config
+     ```
 
-      Please consult the documentation to [Backstage Kubernetes plugin](https://backstage.io/docs/features/kubernetes/configuration#configuring-kubernetes-clusters) for details on its configuration. Hub cluster must be connected via Service Account.
+     Ensure that the Backstage uses a `ServiceAccount` token and the required permissions are granted as mentioned previously.
 
-3. Create new plugin instance in `packages/backend/src/plugins/ocm.ts`:
+     This is useful when you already use a Kubernetes plugin in your Backstage instance. Also, the hub cluster must be connected using the `ServiceAccount`.
 
-   ```ts
-   import { createRouter } from '@janus-idp/backstage-plugin-ocm-backend';
+     For more information about the configuration, see [Backstage Kubernetes plugin](https://backstage.io/docs/features/kubernetes/configuration#configuring-kubernetes-clusters) documentation.
+
+1. Create a new plugin instance in `packages/backend/src/plugins/ocm.ts` file as follows:
+
+   ```ts title="packages/backend/src/plugins/ocm.ts"
    import { Router } from 'express';
+
+   import { createRouter } from '@janus-idp/backstage-plugin-ocm-backend';
+
    import { PluginEnvironment } from '../types';
 
    export default async function createPlugin(
@@ -115,210 +129,251 @@ This plugin is made up of 2 packages:
    }
    ```
 
-4. Import and plug it into `packages/backend/src/index.ts`:
+1. Import and plug the new instance into `packages/backend/src/index.ts` file:
 
-   ```diff
-     ...
-   + import ocm from './plugins/ocm';
-     ...
+   ```ts title="packages/backend/src/index.ts"
+   /* highlight-add-next-line */
+   import ocm from './plugins/ocm';
 
-     async function main() {
-       ...
-       const createEnv = makeCreateEnv(config);
-       ...
-   +   const ocmEnv = useHotMemoize(module, () => createEnv('ocm'));
-       ...
-       const apiRouter = Router();
-       ...
-   +   apiRouter.use('/ocm', await ocm(ocmEnv));
-       ...
-     }
+   async function main() {
+     // ...
+     const createEnv = makeCreateEnv(config);
+     // ...
+     /* highlight-add-next-line */
+     const ocmEnv = useHotMemoize(module, () => createEnv('ocm'));
+     // ...
+     const apiRouter = Router();
+     // ...
+     /* highlight-add-next-line */
+     apiRouter.use('/ocm', await ocm(ocmEnv));
+     // ...
+   }
    ```
 
-5. Import the cluster `Resource` entity provider into `catalog` plugin in `packages/backend/src/plugins/catalog.ts`:
+1. Import the cluster `Resource` entity provider into the `catalog` plugin in the `packages/backend/src/plugins/catalog.ts` file. The scheduler also needs to be configured. Two configurations are possible here:
 
-   ```diff
-     ...
-   + import { ManagedClusterProvider } from '@janus-idp/backstage-plugin-ocm-backend';
-     ...
-     export default async function createPlugin(
-       env: PluginEnvironment,
-     ): Promise<Router> {
-       const builder = await CatalogBuilder.create(env);
-       ...
-   +   const ocm = ManagedClusterProvider.fromConfig(env.config, {
-   +     logger: env.logger,
-   +   });
-   +   builder.addEntityProvider(ocm);
-       ...
-       const { processingEngine, router } = await builder.build();
-       await processingEngine.start();
-       ...
-   +   await Promise.all(
-   +     ocm.map(
-   +       o => env.scheduler.scheduleTask({
-   +         id: `run_ocm_refresh_${o.getProviderName()}`,
-   +         fn: async () => { await o.run() },
-   +         frequency: { minutes: 30 },
-   +         timeout: { minutes: 10 },
-   +       })
-   +     )
-   +   );
-       return router;
-     }
-   ```
+   1. Configure the scheduler inside the `app-config.yaml`:
 
-6. (Optional) The default owner for the cluster entities in the catalog for a specific env can additionally be configured. The configuration follows the [upstream string references documentation](https://backstage.io/docs/features/software-catalog/references/#string-references). For example to set `foo` as the owner for clusters from `env` in the catalog use:
+      ```yaml title="app-config.yaml"
+      catalog:
+        providers:
+          ocm:
+            env:
+              # ...
+              # highlight-add-start
+              schedule: # optional; same options as in TaskScheduleDefinition
+                # supports cron, ISO duration, "human duration" as used in code
+                frequency: { minutes: 1 }
+                # supports ISO duration, "human duration" as used in code
+                timeout: { minutes: 1 }
+              # highlight-add-end
+      ```
 
-   ```yaml
-   # app-config.yaml
+      and and then use the configured scheduler
+
+      ```ts title="packages/backend/src/index.ts"
+      /* highlight-add-next-line */
+      import { ManagedClusterProvider } from '@janus-idp/backstage-plugin-ocm-backend';
+
+      export default async function createPlugin(
+        env: PluginEnvironment,
+      ): Promise<Router> {
+        const builder = await CatalogBuilder.create(env);
+        // ...
+        /* highlight-add-start */
+        const ocm = ManagedClusterProvider.fromConfig(env.config, {
+          logger: env.logger,
+          scheduler: env.scheduler,
+        });
+        builder.addEntityProvider(ocm);
+        /* highlight-add-start */
+        // ...
+      }
+      ```
+
+   2. Add a schedule directly inside the `packages/backend/src/plugins/catalog.ts` file:
+
+      ```ts title="packages/backend/src/index.ts"
+      /* highlight-add-next-line */
+      import { ManagedClusterProvider } from '@janus-idp/backstage-plugin-ocm-backend';
+
+      export default async function createPlugin(
+        env: PluginEnvironment,
+      ): Promise<Router> {
+        const builder = await CatalogBuilder.create(env);
+        // ...
+        /* highlight-add-start */
+        const ocm = ManagedClusterProvider.fromConfig(env.config, {
+          logger: env.logger,
+          schedule: env.scheduler.createScheduledTaskRunner({
+            frequency: { minutes: 1 },
+            timeout: { minutes: 1 },
+          }),
+        });
+        builder.addEntityProvider(ocm);
+        /* highlight-add-start */
+        // ...
+      }
+      ```
+
+1. Optional: Configure the default owner for the cluster entities in the catalog for a specific environment. For example, use the following code to set `foo` as the owner for clusters from `env` in the `app-config.yaml` catalog section:
+
+   ```yaml title="app-config.yaml"
    catalog:
      providers:
        ocm:
          env:
+           # highlight-next-line
            owner: user:foo
    ```
 
-### Setup `@janus-idp/backstage-plugin-ocm`
+   For more information about the default owner configuration, see [upstream string references documentation](https://backstage.io/docs/features/software-catalog/references/#string-references).
 
-Install the frontend plugin:
+#### Setting up the OCM backend package using the new backend system
 
-```sh
-yarn workspace app add @janus-idp/backstage-plugin-ocm
+The OCM plugin supports integration with the [new backend system](https://backstage.io/docs/backend-system/). In order to install the plugin follow the first 2 configuration steps described [here](#setting-up-the-ocm-backend-package). Then add the following lines to the `packages/backend/src/index.ts` file.
+
+```ts
+import { ocmPlugin } from '@janus-idp/backstage-plugin-ocm-backend';
+
+backend.add(ocmPlugin());
 ```
 
-Then you can just pick whichever components you want to use.
+#### Setting up the OCM frontend package
 
-#### OcmPage
+1. Install the OCM frontend plugin using the following command:
 
-A standalone page/dashboard showing all clusters as tiles.
+   ```console
+   yarn workspace app add @janus-idp/backstage-plugin-ocm
+   ```
 
-Add to `packages/app/src/App.tsx`:
+1. Select the components that you want to use, such as:
 
-```diff
-+ import { OcmPage } from '@janus-idp/backstage-plugin-ocm';
+   - `OcmPage`: This is a standalone page or dashboard displaying all clusters as tiles. You can add `OcmPage` to `packages/app/src/App.tsx` file as follows:
 
-  const routes = (
-    <FlatRoutes>
-      ...
-+     <Route path="/ocm" element={<OcmPage logo={<Logo />} />} />
-      ...
-    </FlatRoutes>
-  );
-```
+     ```tsx title="packages/app/src/App.tsx"
+     /* highlight-add-next-line */
+     import { OcmPage } from '@janus-idp/backstage-plugin-ocm';
 
-And update navigation in `packages/app/src/components/Root/Root.tsx`:
+     const routes = (
+       <FlatRoutes>
+         {/* ... */}
+         {/* highlight-add-next-line */}
+         <Route path="/ocm" element={<OcmPage logo={<Logo />} />} />
+       </FlatRoutes>
+     );
+     ```
 
-```diff
-+ import StorageIcon from '@material-ui/icons/Storage';
-  ...
-  export const Root = ({ children }: PropsWithChildren<{}>) => (
-    <SidebarPage>
-      <Sidebar>
-        <SidebarGroup label="Menu" icon={<MenuIcon />}>
-          ...
-+         <SidebarItem icon={StorageIcon} to="ocm" text="Clusters" />
-          ...
-       </SidebarGroup>
-       ...
-      </Sidebar>
-      {children}
-    </SidebarPage>
-  );
-```
+     You can also update navigation in `packages/app/src/components/Root/Root.tsx` as follows:
 
-#### ClusterContextProvider
+     ```tsx title="packages/app/src/components/Root/Root.tsx"
+     /* highlight-add-next-line */
+     import StorageIcon from '@material-ui/icons/Storage';
 
-React context provided for OCM data related to current entity. This component is required to be used in order to display any data on following React components.
+     export const Root = ({ children }: PropsWithChildren<{}>) => (
+       <SidebarPage>
+         <Sidebar>
+           <SidebarGroup label="Menu" icon={<MenuIcon />}>
+             {/* ... */}
+             {/* highlight-add-next-line */}
+             <SidebarItem icon={StorageIcon} to="ocm" text="Clusters" />
+           </SidebarGroup>
+           {/* ... */}
+         </Sidebar>
+         {children}
+       </SidebarPage>
+     );
+     ```
 
-Place this context provider into your `Resource` entity rendeder (usually in `packages/app/src/components/catalog/EntityPage.tsx` or in a component imported by in here):
+   - `ClusterContextProvider`: This component is a React context provided for OCM data, which is related to the current entity. The `ClusterContextProvider` component is used to display any data on the React components mentioned in `packages/app/src/components/catalog/EntityPage.tsx`:
 
-```diff
-+ import { ClusterContextProvider } from '@janus-idp/backstage-plugin-ocm';
-  ...
- const isType = (types: string | string[]) => (entity: Entity) => {
-  if (!entity?.spec?.type) {
-    return false;
-  }
-  return typeof types === 'string'
-    ? entity?.spec?.type === types
-    : types.includes(entity.spec.type as string);
-};
+     ```tsx title="packages/app/src/components/catalog/EntityPage.tsx"
+     /* highlight-add-start */
+     import {
+       ClusterAvailableResourceCard,
+       ClusterContextProvider,
+       ClusterInfoCard,
+     } from '@janus-idp/backstage-plugin-ocm';
 
-+ const resourcePage = {
-    ...
-+           <EntitySwitch.Case if={e => e?.spec?.type === "kubernetes-cluster"}>
-+             <ClusterContextProvider>
-                ... // OCM plugin components goes here
-+             </ClusterContextProvider>
-+           </EntitySwitch.Case>
-    ...
-+ }
-  ...
-  export const entityPage = (
-    <EntitySwitch>
-      ...
-+     <EntitySwitch.Case if={isKind('resource')} children={resourcePage} />
-      ...
-    </EntitySwitch>
-  );
+     /* highlight-add-end */
 
+     const isType = (types: string | string[]) => (entity: Entity) => {
+       if (!entity?.spec?.type) {
+         return false;
+       }
+       return typeof types === 'string'
+         ? entity?.spec?.type === types
+         : types.includes(entity.spec.type as string);
+     };
 
-```
+     export const resourcePage = (
+       <EntityLayout>
+         {/* ... */}
+         {/* highlight-add-start */}
+         <EntityLayout.Route path="/status" title="status">
+           <EntitySwitch>
+             <EntitySwitch.Case if={isType('kubernetes-cluster')}>
+               <ClusterContextProvider>
+                 <Grid container direction="column" xs={6}>
+                   <Grid item>
+                     <ClusterInfoCard />
+                   </Grid>
+                   <Grid item>
+                     <ClusterAvailableResourceCard />
+                   </Grid>
+                 </Grid>
+               </ClusterContextProvider>
+             </EntitySwitch.Case>
+           </EntitySwitch>
+         </EntityLayout.Route>
+         {/* highlight-add-end */}
+       </EntityLayout>
+     );
 
-#### ClusterStatusCard
+     export const entityPage = (
+       <EntitySwitch>
+         {/* ... */}
+         {/* highlight-add-next-line */}
+         <EntitySwitch.Case if={isKind('resource')} children={resourcePage} />
+       </EntitySwitch>
+     );
+     ```
 
-Entity component showing cluster availability status as an overview card.
+     In the previous codeblock, you can place the context provider into your `Resource` entity renderer, which is usually available in `packages/app/src/components/catalog/EntityPage.tsx` or in an imported component.
 
-```diff
-  <ClusterContextProvider>
-    ...
-+   <ClusterStatusCard />
-    ...
-  </ClusterContextProvider>
-```
+   - `<ClusterInfoCard />`: This is an entity component displaying details of a cluster in a table:
 
-#### ClusterInfoCard
+   - `<ClusterAvailableResourceCard />`: This is an entity component displaying the available resources on a cluster. For example, see [`.status.capacity`](https://open-cluster-management.io/concepts/managedcluster/#cluster-heartbeats-and-status) of the `ManagedCluster` resource.
 
-Entity component showing details about cluster as a table.
+## For users
 
-```diff
-  <ClusterContextProvider>
-    ...
-+   <ClusterInfoCard />
-    ...
-  </ClusterContextProvider>
-```
+### Using the OCM plugin in Backstage
 
-#### ClusterAvailableResourceCard
+The OCM plugin integrates your Backstage instance with multi-cluster engines and displays real-time data from OCM.
 
-Entity component showing all available resources on the cluster. References [`.status.capacity`](https://open-cluster-management.io/concepts/managedcluster/#cluster-heartbeats-and-status) of the `ManagedCluster` resource.
+#### Prerequisites
 
-```diff
-  <ClusterContextProvider>
-    ...
-+   <ClusterAvailableResourceCard />
-    ...
-  </ClusterContextProvider>
-```
+- Your Backstage application is installed and running.
+- You have installed the OCM plugin. For the installation process, see [Installation](#installation).
 
-#### ClusterAllocatableResourceCard
+#### Procedure
 
-Entity component showing allocatable resources on the cluster. References [`.status.allocatable`](https://open-cluster-management.io/concepts/managedcluster/#cluster-heartbeats-and-status) of the `ManagedCluster` resource.
+1. Open your Backstage application.
+1. Click the **Clusters** tab from the left-side panel to view the **Managed Clusters** page.
 
-```diff
-  <ClusterContextProvider>
-    ...
-+   <ClusterAllocatableResourceCard />
-    ...
-  </ClusterContextProvider>
-```
+   The **Managed Clusters** page displays the list of clusters with additional information, such as status, infrastructure provider, associated OpenShift version, and available nodes.
 
-## Development
+   ![ocm-plugin-ui](./images/ocm-plugin-user1.png)
 
-If your plugin has been installed to the example app in this repository, you'll be able to access it by running `yarn start` in the root directory, and then navigating to [/ocm](http://localhost:3000/ocm). To start a development setup in isolation with a faster startup and hot reloads
+   You can also upgrade the OpenShift version for a cluster using the **Upgrade available** option in the **VERSION** column.
 
-1. First run the `ocm-backend` plugin in the `plugins/ocm-backend` directory by running `yarn start`.
-2. Then run the `ocm` frontend plugin in the `plugins/ocm` directory by running `yarn start`.
+1. Select a cluster from the **Managed Clusters** to view the related cluster information.
 
-This only meant for local development, and the setup for it can be found inside the [/dev](./dev) directories of the individual plugins.
+   You are redirected to the cluster-specific page, which consists of:
+
+   - **Cluster Information**, such as name, status, accessed Kubernetes version, associated OpenShift ID and version, and accessed platform.
+   - **Available** cluster capacity, including CPU cores, memory size, and number of pods.
+   - **Related Links**, which enable you to access different consoles directly, such as OpenShift Console, OCM Console, and OpenShift Cluster Manager Console.
+   - **Relations** card, which displays the visual representation of the cluster and associated dependencies.
+
+     ![ocm-plugin-ui](./images/ocm-plugin-user2.png)

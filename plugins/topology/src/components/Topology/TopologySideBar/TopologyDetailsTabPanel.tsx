@@ -1,21 +1,34 @@
 import * as React from 'react';
+
 import {
-  Split,
-  SplitItem,
-  Timestamp,
-  TimestampFormat,
-} from '@patternfly/react-core';
-import PodSet from '../../Pods/PodSet';
-import TopologySideBarDetailsItem from './TopologySideBarDetailsItem';
-import { DeploymentModel } from '../../../models';
-import TopologyDeploymentDetails from './TopologyDeploymentDetails';
-import { V1Deployment, V1OwnerReference } from '@kubernetes/client-node';
+  V1CronJob,
+  V1DaemonSet,
+  V1Deployment,
+  V1Job,
+} from '@kubernetes/client-node';
+import { Split, SplitItem } from '@patternfly/react-core';
 import { BaseNode } from '@patternfly/react-topology';
-import TopologyResourceLabels from './TopologyResourceLabels';
+
+import {
+  CronJobModel,
+  DaemonSetModel,
+  DeploymentModel,
+  JobModel,
+  PodModel,
+  StatefulSetModel,
+} from '../../../models';
+import PodSet from '../../Pods/PodSet';
+import TopologyCronJobDetails from './TopologyCronJobDetails';
+import TopologyDaemonSetDetails from './TopologyDaemonSetDetails';
+import TopologyDeploymentDetails from './TopologyDeploymentDetails';
+import TopologyJobDetails from './TopologyJobDetails';
+import TopologyWorkloadDetails from './TopologyWorkloadDetails';
 
 import './TopologyDetailsTabPanel.css';
 
-const TopologyDetailsTabPanel: React.FC<{ node: BaseNode }> = ({ node }) => {
+type TopologyDetailsTabPanelProps = { node: BaseNode };
+
+const TopologyDetailsTabPanel = ({ node }: TopologyDetailsTabPanelProps) => {
   const { width, height } = node.getDimensions();
   const data = node.getData();
   const resource = data.resource;
@@ -24,6 +37,25 @@ const TopologyDetailsTabPanel: React.FC<{ node: BaseNode }> = ({ node }) => {
   const donutStatus = data.data?.podsData;
   const cx = width / 2;
   const cy = height / 2;
+
+  const getWorkloadDetails = () => {
+    switch (resourceKind) {
+      case DeploymentModel.kind:
+        return (
+          <TopologyDeploymentDetails resource={resource as V1Deployment} />
+        );
+      case DaemonSetModel.kind:
+        return <TopologyDaemonSetDetails resource={resource as V1DaemonSet} />;
+      case CronJobModel.kind:
+        return <TopologyCronJobDetails resource={resource as V1CronJob} />;
+      case JobModel.kind:
+        return <TopologyJobDetails resource={resource as V1Job} />;
+      case StatefulSetModel.kind:
+      case PodModel.kind:
+      default:
+        return <TopologyWorkloadDetails resource={resource} />;
+    }
+  };
 
   return (
     <div className="topology-details-tab" data-testid="details-tab">
@@ -42,58 +74,7 @@ const TopologyDetailsTabPanel: React.FC<{ node: BaseNode }> = ({ node }) => {
           <SplitItem isFilled />
         </Split>
       )}
-      <div className="topology-workload-details">
-        <dl>
-          <TopologySideBarDetailsItem label="Name">
-            {resource.metadata?.name}
-          </TopologySideBarDetailsItem>
-          <TopologySideBarDetailsItem label="Namespace">
-            {resource.metadata?.namespace}
-          </TopologySideBarDetailsItem>
-          <TopologySideBarDetailsItem label="Labels" emptyText="No labels">
-            {resource.metadata?.labels && (
-              <TopologyResourceLabels
-                labels={resource.metadata.labels}
-                dataTest="label-list"
-              />
-            )}
-          </TopologySideBarDetailsItem>
-          <TopologySideBarDetailsItem
-            label="Annotations"
-            emptyText="No annotations"
-          >
-            {resource.metadata?.annotations && (
-              <TopologyResourceLabels
-                labels={resource.metadata.annotations}
-                dataTest="annotation-list"
-              />
-            )}
-          </TopologySideBarDetailsItem>
-          <TopologySideBarDetailsItem label="Created at">
-            <Timestamp
-              date={resource.metadata?.creationTimestamp}
-              dateFormat={TimestampFormat.medium}
-              timeFormat={TimestampFormat.short}
-            />
-          </TopologySideBarDetailsItem>
-          <TopologySideBarDetailsItem label="Owner" emptyText="No owner">
-            {resource.metadata?.ownerReferences && (
-              <ul data-testid="owner-list">
-                <div>
-                  {(resource.metadata.ownerReferences ?? []).map(
-                    (o: V1OwnerReference) => (
-                      <li key={o.uid}>{o.name}</li>
-                    ),
-                  )}
-                </div>
-              </ul>
-            )}
-          </TopologySideBarDetailsItem>
-        </dl>
-      </div>
-      {resourceKind === DeploymentModel.kind ? (
-        <TopologyDeploymentDetails resource={resource as V1Deployment} />
-      ) : null}
+      {getWorkloadDetails()}
     </div>
   );
 };

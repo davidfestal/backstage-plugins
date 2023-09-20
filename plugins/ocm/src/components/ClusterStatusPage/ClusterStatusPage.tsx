@@ -1,31 +1,38 @@
-import React, { useState } from 'react';
-import { SearchContextProvider } from '@backstage/plugin-search-react';
-import {
-  Content,
-  Page,
-  InfoCard,
-  WarningPanel,
-  CodeSnippet,
-  StatusOK,
-  StatusError,
-  Header,
-} from '@backstage/core-components';
-import { CircularProgress, Grid, makeStyles } from '@material-ui/core';
-
-import { catalogApiRef, EntityRefLink } from '@backstage/plugin-catalog-react';
+import React, { ReactElement } from 'react';
 import useAsyncFn from 'react-use/lib/useAsyncFn';
 import useDebounce from 'react-use/lib/useDebounce';
-import { useApi } from '@backstage/core-plugin-api';
-import { Entity } from '@backstage/catalog-model';
-import { HomePageCompanyLogo } from '@backstage/plugin-home';
-import { ErrorResponseBody } from '@backstage/errors';
-import { ClusterOverview } from '@janus-idp/backstage-plugin-ocm-common';
-import { OcmApiRef } from '../../api';
 
-interface clusterEntity {
-  status: boolean;
-  entity: Entity;
-}
+import {
+  CodeSnippet,
+  Content,
+  Header,
+  Page,
+  StatusAborted,
+  StatusError,
+  StatusOK,
+  Table,
+  WarningPanel,
+} from '@backstage/core-components';
+import { useApi } from '@backstage/core-plugin-api';
+import { catalogApiRef, EntityRefLink } from '@backstage/plugin-catalog-react';
+import { HomePageCompanyLogo } from '@backstage/plugin-home';
+import { SearchContextProvider } from '@backstage/plugin-search-react';
+
+import { Chip, CircularProgress, Grid, makeStyles } from '@material-ui/core';
+
+import {
+  ClusterNodesStatus,
+  ClusterOverview,
+} from '@janus-idp/backstage-plugin-ocm-common';
+
+import { OcmApiRef } from '../../api';
+import { Status, Update } from '../common';
+
+const useStylesTwo = makeStyles({
+  container: {
+    width: '100%',
+  },
+});
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -37,41 +44,61 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const useCatalogStyles = makeStyles({
-  root: {
-    height: '100%',
-    transition: 'all .25s linear',
-    textAlign: 'center',
-    '&:hover': {
-      boxShadow: '0px 0px 16px 0px rgba(0,0,0,0.8)',
-    },
-    '& svg': {
-      fontSize: 80,
-    },
-    '& img': {
-      height: 80,
-      width: 80,
-      objectFit: 'contain',
-    },
-  },
-  subheader: {
-    display: 'block',
-    width: '100%',
-  },
-  link: {
-    '&:hover': {
-      textDecoration: 'none',
-    },
-  },
-});
+const NodeChip = ({
+  count,
+  indicator,
+}: {
+  count: number;
+  indicator: ReactElement;
+}) => (
+  <>
+    {count > 0 ? (
+      <>
+        <Chip
+          label={
+            <>
+              {indicator}
+              {count}
+            </>
+          }
+          variant="outlined"
+        />
+      </>
+    ) : (
+      <></>
+    )}
+  </>
+);
+
+const NodeChips = ({ nodes }: { nodes: ClusterNodesStatus[] }) => {
+  const readyChipsNodes = nodes.filter(node => node.status === 'True').length;
+  // TODO: Check if not ready correctly
+  const notReadyNodesCount = nodes.filter(
+    node => node.status === 'False',
+  ).length;
+
+  if (nodes.length === 0) {
+    return <>-</>;
+  }
+
+  return (
+    <>
+      <NodeChip count={readyChipsNodes} indicator={<StatusOK />} />
+      <NodeChip count={notReadyNodesCount} indicator={<StatusError />} />
+      <NodeChip
+        count={nodes.length - readyChipsNodes - notReadyNodesCount}
+        indicator={<StatusAborted />}
+      />
+    </>
+  );
+};
 
 const CatalogClusters = () => {
   const catalogApi = useApi(catalogApiRef);
   const ocmApi = useApi(OcmApiRef);
-  const classes = useCatalogStyles();
+  const classes = useStylesTwo();
 
-  const [clusterEntities, setClusterEntities] = useState<clusterEntity[]>([]);
-  const [{ loading, error }, refresh] = useAsyncFn(
+  const [{ value: clusterEntities, loading, error }, refresh] = useAsyncFn(
     async () => {
       const clusterResourceEntities = await catalogApi.getEntities({
         filter: { kind: 'Resource', 'spec.type': 'kubernetes-cluster' },
@@ -80,20 +107,21 @@ const CatalogClusters = () => {
       const clusters = await ocmApi.getClusters();
 
       if ('error' in clusters) {
-        throw new Error((clusters as ErrorResponseBody).error.message);
+        throw new Error(clusters.error.message);
       }
 
-      setClusterEntities(
-        clusterResourceEntities.items.map(entity => {
+      const clusterEntityMappings = clusterResourceEntities.items.map(
+        entity => {
           const cluster = (clusters as ClusterOverview[]).find(
             cd => cd.name === entity.metadata.name,
           );
           return {
-            status: cluster?.status.available!,
+            cluster: cluster!,
             entity: entity,
           };
-        }),
+        },
       );
+      return clusterEntityMappings;
     },
     [catalogApi],
     { loading: true },
@@ -112,42 +140,60 @@ const CatalogClusters = () => {
     return <CircularProgress />;
   }
 
-  return (
-    <>
-      {clusterEntities.map(clusterEntity => (
-        <Grid
-          item
-          xs={12}
-          sm={6}
-          md={4}
-          lg={3}
-          xl={2}
-          key={clusterEntity.entity.metadata.name}
-        >
-          <EntityRefLink
-            entityRef={clusterEntity.entity}
-            className={classes.link}
-          >
-            <InfoCard
-              divider={false}
-              noPadding
-              className={classes.root}
-              title={
-                <div className={classes.subheader}>
-                  {clusterEntity.status === true ? (
-                    <StatusOK />
-                  ) : (
-                    <StatusError />
-                  )}
-                  {clusterEntity.entity.metadata.title ||
-                    clusterEntity.entity.metadata.name}
-                </div>
-              }
+  const data = clusterEntities
+    ? clusterEntities.map(ce => {
+        return {
+          name: (
+            <EntityRefLink entityRef={ce.entity}>
+              {ce.cluster.name}
+            </EntityRefLink>
+          ),
+          status: <Status status={ce.cluster.status} />,
+          infrastructure: ce.cluster.platform,
+          version: (
+            <Update
+              data={{
+                version: ce.cluster.openshiftVersion,
+                update: ce.cluster.update,
+              }}
             />
-          </EntityRefLink>
-        </Grid>
-      ))}
-    </>
+          ),
+          nodes: <NodeChips nodes={ce.cluster.nodes} />,
+        };
+      })
+    : [];
+
+  return (
+    <div className={classes.container}>
+      <Table
+        options={{ paging: false }}
+        data={data}
+        columns={[
+          {
+            title: 'Name',
+            field: 'name',
+            highlight: true,
+          },
+          {
+            title: 'Status',
+            field: 'status',
+          },
+          {
+            title: 'Infrastructure',
+            field: 'infrastructure',
+          },
+          {
+            title: 'Version',
+            field: 'version',
+          },
+          {
+            title: 'Nodes',
+            field: 'nodes',
+          },
+        ]}
+        title="All"
+      />
+    </div>
   );
 };
 
@@ -160,7 +206,7 @@ export const ClusterStatusPage = ({ logo }: { logo?: React.ReactNode }) => {
         <Header title="Your Managed Clusters" />
         <Content>
           <Grid container justifyContent="center" spacing={6}>
-            <HomePageCompanyLogo className={container} logo={logo} />
+            {logo && <HomePageCompanyLogo className={container} logo={logo} />}
             <Grid container item xs={12} justifyContent="center">
               <CatalogClusters />
             </Grid>

@@ -1,60 +1,69 @@
 # 3scale Backstage provider
 
-This is a plugin for synchronizing 3scale content into [Backstage.io](https://backstage.io/) catalog.
+The 3scale Backstage provider plugin synchronizes the 3scale content into the [Backstage](https://backstage.io/) catalog.
 
-## Install
+## For administrators
 
-1. Install the plugin
+### Installation
 
-   ```sh
-   yarn workspace backend add @janus-idp/backstage-plugin-3scale-backend
+Run the following command to install the 3scale Backstage provider plugin:
+
+```console
+yarn workspace backend add @janus-idp/backstage-plugin-3scale-backend
+```
+
+### Configuration
+
+3scale Backstage provider allows configuration of one or multiple providers using the `app-config.yaml` configuration file of Backstage.
+
+**Procedure**
+
+1. Use a `threeScaleApiEntity` marker to start configuring the `app-config.yaml` file of Backstage:
+
+   ```yaml title="app-config.yaml"
+   catalog:
+     providers:
+       threeScaleApiEntity:
+         dev:
+           baseUrl: https://<TENANT>-admin.3scale.net
+           accessToken: <ACCESS_TOKEN>
+           schedule: # optional; same options as in TaskScheduleDefinition
+             # supports cron, ISO duration, "human duration" as used in code
+             frequency: { minutes: 1 }
+             # supports ISO duration, "human duration" as used in code
+             timeout: { minutes: 1 }
    ```
 
-## Configure
+2. Add the following code to `packages/backend/src/plugins/catalog.ts` file:
 
-3scale Backstage provider allows configuration of one or many providers using the `app-config.yaml` configuration file of Backstage. Use a `threeScaleApiEntity` marker to start configuring them.
+   ```ts title="packages/backend/src/plugins/catalog.ts"
+   /* highlight-add-next-line */
+   import { ThreeScaleApiEntityProvider } from '@janus-idp/backstage-plugin-3scale-backend';
 
-```yaml
-# app-config.yaml
+   export default async function createPlugin(
+     env: PluginEnvironment,
+   ): Promise<Router> {
+     const builder = await CatalogBuilder.create(env);
 
-catalog:
-  providers:
-    threeScaleApiEntity:
-      dev:
-        baseUrl: https://<TENANT>-admin.3scale.net
-        accessToken: <ACCESS_TOKEN>
-        schedule: # optional; same options as in TaskScheduleDefinition
-          # supports cron, ISO duration, "human duration" as used in code
-          frequency: { minutes: 1 }
-          # supports ISO duration, "human duration" as used in code
-          timeout: { minutes: 1 }
-```
+     /* ... other processors and/or providers ... */
+     /* highlight-add-start */
+     builder.addEntityProvider(
+       ThreeScaleApiEntityProvider.fromConfig(env.config, {
+         logger: env.logger,
+         scheduler: env.scheduler,
+       }),
+     );
+     /* highlight-add-end */
 
-Once you've done that, you'll also need to add the segment below to `packages/backend/src/plugins/catalog.ts`:
+     const { processingEngine, router } = await builder.build();
+     await processingEngine.start();
+     return router;
+   }
+   ```
 
-```ts
-/* packages/backend/src/plugins/catalog.ts */
+### Troubleshooting
 
-import { ThreeScaleApiEntityProvider } from '@fmenesesg/threescale-backstage-provider';
-
-[...]
-  const builder = await CatalogBuilder.create(env);
-
-  /** ... other processors and/or providers ... */
-  builder.addEntityProvider(
-    ThreeScaleApiEntityProvider.fromConfig(env.config, {
-      logger: env.logger,
-      scheduler: env.scheduler
-    }),
-  );
-
-  const { processingEngine, router } = await builder.build();
-[...]
-```
-
-## Troubleshoot
-
-After having started your Backstage app, you should see some lines like those below in logs:
+When you start your Backstage application, you can see some log lines as follows:
 
 ```log
 [1] 2023-02-13T15:26:09.356Z catalog info Discovered ApiEntity API type=plugin target=ThreeScaleApiEntityProvider:dev

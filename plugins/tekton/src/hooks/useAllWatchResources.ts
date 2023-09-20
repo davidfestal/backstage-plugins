@@ -1,5 +1,9 @@
+import { useEffect, useMemo, useState } from 'react';
+
 import { KubernetesObjects } from '@backstage/plugin-kubernetes';
-import { useState, useEffect } from 'react';
+
+import { useDeepCompareMemoize } from '@janus-idp/shared-react';
+
 import { TektonResponseData } from '../types/types';
 import { getTektonResources } from '../utils/tekton-utils';
 
@@ -27,15 +31,14 @@ export const useAllWatchResources = (
     };
   }, [loading, kubernetesObjects, error, cluster]);
 
-  const watchResourcesData = watchedResource.reduce(
-    (acc: TektonResponseData, resKind) => {
+  const watchResourcesData = useMemo(() => {
+    return watchedResource.reduce((acc: TektonResponseData, resKind) => {
       if (resources[resKind]) {
         acc[resKind] = resources[resKind];
       }
       return acc;
-    },
-    {},
-  );
+    }, {});
+  }, [watchedResource, resources]);
 
-  return watchResourcesData;
+  return useDeepCompareMemoize(watchResourcesData);
 };

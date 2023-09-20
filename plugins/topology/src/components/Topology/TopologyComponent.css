@@ -2,9 +2,8 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
-.topology-text-muted {
-  color: var(--pf-global--Color--200);
+.bs-topology-text-muted {
+  color: var(--pf-v5-global--Color--200);
 }
